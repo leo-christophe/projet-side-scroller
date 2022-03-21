@@ -1,0 +1,3 @@
+Changements V1: 
+Prévu : gérer le tout avec des classes
+réparer les bugs
