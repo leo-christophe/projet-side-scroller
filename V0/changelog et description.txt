@@ -1,0 +1,7 @@
+Changements : 
+- Ajout du joueur
+- Ajout de collisions pour empêcher le joueur de dépasser les limites
+- Ajout de gravité pour que le joueur redescende après avoir sauté.
+- Ajout des controles pour que le joueur puisse sauter et se déplacer.
+- Ajout de textures pour le joueur et l'arrière plan
+- Ajout d'un moyen de quitter

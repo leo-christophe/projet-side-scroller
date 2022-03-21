@@ -1,0 +1,11 @@
+Changements : 
+- Ajout du joueur
+- Ajout de collisions pour empêcher le joueur de dépasser les limites
+- Ajout de gravité pour que le joueur redescende après avoir sauté.
+- Ajout des controles pour que le joueur puisse sauter et se déplacer.
+- Ajout de textures pour le joueur et l'arrière plan
+- Ajout d'un moyen de quitter
+
+Pour l'instant il n'y a qu'une boucle infinie. Donc lorsqu'on execute le script main, la boucle infinie s'active et le seul moyen de quitter le 
+programme est soit de fermer la fenêtre, soit appuyer sur ALT-F4. Il y a pour l'instant un joueur, sans animation qui peut se déplacer à droite,
+à gauche, peut sauter. Lorsque le joueur saute, il y a comme une gravité qui permet de le redescendre. Problème : on peut sauter à l'infini. 
