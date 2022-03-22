@@ -1,11 +1,29 @@
 import pygame
-from personnage import *
 pygame.init()
 
 #chargement de la fenêtre
-taille = (1080, 720)
+WIDTH = 1080
+HEIGHT = 720
+taille = (WIDTH, HEIGHT)
 fenetre = pygame.display.set_mode(taille)   
 pygame.display.set_caption("Juan Adventures")
+
+right = [
+    pygame.image.load('assets/player_right_1.png'),
+    pygame.image.load('assets/player_right_2.png')
+]
+
+left = [
+    pygame.image.load('assets/player_left_1.png'),
+    pygame.image.load('assets/player_left_2.png')
+]
+
+standing = pygame.image.load("assets/player.png")
+
+plateforme_principale_x = 165
+
+marge_x = 10
+marge_y = 40
 
 #fps
 clock = pygame.time.Clock()
@@ -14,43 +32,83 @@ clock = pygame.time.Clock()
 image_fond = pygame.image.load("assets/fond_plaines.png").convert()
 fenetre.blit(image_fond, (0,0))
 
-#chargement des textures du joueur (player_right et player_left ne servent pour l'instant à rien)
-image_player = pygame.image.load("assets/player.png")
-image_player_right = pygame.image.load("assets/player_right_1.png")
-image_player_left = pygame.image.load("assets/player_left_1.png")
-#affichage du joueur et prise de stats
-size_player = image_player.get_size()
-plateforme_principale_x = 165
-fenetre.blit(image_player, (size_player[1], 720 - size_player[1] - plateforme_principale_x))
-position_perso = image_player.get_rect()
+import pygame
 
-marge_x = 10
-marge_y = 300
+class Sprite_Player(pygame.sprite.Sprite):
+    def __init__(self, longueur=32, largeur=32):
+        super().__init__()
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("assets/player.png")
+        self.size = self.image.get_size()
+        self.rect = self.image.get_rect()
+        self.pos = (self.size[1], 720 - self.size[1] - 165)
+        self.x = self.size[1]
+        self.y = 720 - self.size[1] - 165
 
+        fenetre.blit(self.image, self.pos)
+        self.rect = self.image.get_rect()
+
+        self.vie = 100
+        self.att = 1
+
+    def goRight(self, marge):
+        self.rect.x += marge
+        return self.rect
+
+    def goLeft(self, marge):
+        self.rect.x -= marge
+        return self.rect
+
+    def goJump(self, jump):
+        self.rect.y -= jump
+        return self.rect
+
+    def soin(self, vie):
+        if self.vie < 100:
+            self.vie += vie
+        else:
+            print("Il n'y a rien à soigner.")
+
+    def degat(self, degats):
+        self.vie -= degats
+        if self.vie < 0:
+            self.vie = 0
+    
 pygame.display.flip()
 
-plateforme = (720 - size_player[1] - plateforme_principale_x)
-first_running = 0
+#####################################################################?
 
 all_sprites = pygame.sprite.Group()
 
-Player = Sprite_Player()
-Player.rect.x = Player.size[1]
-Player.rect.y = 720 - 150 - Player.size[1]
+current_player = Sprite_Player()
+current_player.rect.x = current_player.size[1]
+current_player.rect.y = 720 - 150 - current_player.size[1]
 
-all_sprites.add(Player)
+plateforme_x = 150
+plateforme = (720 - current_player.size[1] - plateforme_principale_x)
+
+all_sprites.add(current_player)
 
 ######################################################################? BOUCLE
+walkCount = 0
+left = False
+right = False
+
+def redrawWindow():
+    global walkCount
+    fenetre.blit(image_fond, (0, 0))
+    pygame.display.flip()
+
+first_running = 0
 jeu = True
 while jeu:
     """
     Cette boucle infinie sert à faire marcher le jeu en continu. Tant que ALT-F4 ou que la fenêtre n'est pas fermée, le jeu continuera de marcher dès l'exécution du programme.
     """
-    ######################################################################? CONTROLES
-
+    pygame.time.delay(1)
     if first_running == 0: #first running sert à spawn le joueur au correct endroit
-        position_perso.y = 720 - plateforme_principale_x
-        fenetre.blit(image_player, (50, 720 - size_player[0] - plateforme_principale_x))
+        current_player.y = 720 - plateforme_principale_x
+        fenetre.blit(current_player.image, (50, 720 - current_player.size[1] - plateforme_principale_x))
         first_running = 1
     ######################################################################?
     for event in pygame.event.get(): #pour quitter
@@ -60,43 +118,57 @@ while jeu:
         
         elif event.type == pygame.KEYDOWN: #? Sauter
             if (event.key == pygame.K_UP) or (event.key == pygame.K_SPACE):
-                position_perso = position_perso.move(marge_x, -marge_y)
-                fenetre.blit(image_player, position_perso)
+                current_player.goJump(marge_y)
+    #https://www.techwithtim.net/tutorials/game-development-with-python/pygame-tutorial/pygame-animation/
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] or keys[pygame.K_q]:
+        left = True
+        right = False
+        current_player.goLeft(marge_x)
+
+    elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        right = True
+        left = False
+        current_player.goRight(marge_x)
+
+
     ######################################################################? COLLISIONS
-    if position_perso[0] >= 1080 - size_player[0]:          #? Collisions d'à droite
-        position_perso = position_perso.move(-10, 0)
+    if current_player.rect[0] >= 1080 - current_player.size[1]:
+        left = True
+        right = False          #? Collisions d'à droite
+        current_player.rect = current_player.rect.move(-10, 0)
 
-    elif position_perso[0] <= 0 - size_player[0]:           #? Collisions d'à gauche
-        position_perso = position_perso.move(10, 0)
+    elif current_player.rect[0] <= 0 - current_player.size[1]:
+        right = True
+        left = False          #? Collisions d'à gauche
+        current_player.rect = current_player.rect.move(10, 0)
 
-    elif position_perso[1] <= 0:                            #? Collisions du haut
-        position_perso = position_perso.move(0, 10)
+    elif current_player.rect[1] <= 0:   
+        left = False
+        right = False                         #? Collisions du haut
+        current_player.rect = current_player.rect.move(0, 10)
 
-    elif position_perso[1] >= (720 - size_player[1] - plateforme_principale_x): #? Collision du bas (platforme)
-        position_perso = position_perso.move(0, -10)
+    elif current_player.rect[1] >= (720 - current_player.size[1] - plateforme_principale_x): #? Collision du bas (platforme)
+        left = False
+        right = False
+        current_player.rect = current_player.rect.move(0, -10)
 
     #? Gravité
-    elif position_perso[1] < (plateforme - 20):
-            position_perso = position_perso.move(0, 3)
+    elif current_player.rect[1] < (plateforme - 20):
+        left = False
+        right = False
+        current_player.rect = current_player.rect.move(0, 5)
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        Player.goLeft(-marge_x)
-        
-
-    if keys[pygame.K_RIGHT]:
-        Player.goLeft(marge_x)
-    if keys[pygame.K_UP]:
-        Player.Jump(marge_y)
- 
-    pygame.display.flip()
+    all_sprites.update()
+    all_sprites.draw(fenetre)
     clock.tick(60)
     fenetre.blit(image_fond, (0,0))
-    fenetre.blit(image_player, position_perso)
+    fenetre.blit(current_player.image, current_player.rect)
 
     pygame.display.flip()
-    clock.tick(120)
+    clock.tick(60)
 
+    redrawWindow()
 pygame.QUIT()
 
 #(Des liens pour des tutos)
