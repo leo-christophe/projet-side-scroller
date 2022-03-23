@@ -154,13 +154,12 @@ while jeu:
     collide = current_player.rect.colliderect(
         fond_plaine_plateforme_pos
                                       )
-    #collide
+    collide
     #current_player.rect
     #fond_plaine_plateforme_pos
     print(fond_plaine_plateforme_pos.bottom)
-    print(current_player.rect.top)
     if collide == True:
-        fond_plaine_plateforme_pos.bottom = current_player.rect.top
+        current_player.rect.bottom = fond_plaine_plateforme.rect.top
         print("i")
 
     ######################################################################? COLLISIONS
@@ -195,9 +194,9 @@ while jeu:
 
     all_sprites.update()
     all_sprites.draw(fenetre)
-    clock.tick(60)
+
     fenetre.blit(image_fond, (0,0))
-    fenetre.blit(fond_plaine_plateforme, (0, 547))
+    fenetre.blit(fond_plaine_plateforme, (0, 450))
     fenetre.blit(current_player.image, current_player.rect)
 
     pygame.display.flip()
