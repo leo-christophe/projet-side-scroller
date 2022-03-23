@@ -13,6 +13,7 @@
 - Ajout de controles en plus des flèches:
 > `q` pour aller à gauche, `d` pour aller à droite, `z` pour regarder en l'air, `la barre d'espace` pour sauter.
 - Modification du fonctionnement du saut. Si le joueur regarde à droite, il va sauter vers la droite, s'il regarde à gauche, il va sauter vers la gauche, sinon, s'il regarde en l'air (z) ou s'il reste normal (debout), il saute tout droit. 
+- Reorganisation du dossier assets
 - Ajout de documentations, de commentaires, debut de la fiche probleme-solution, optimisation du code.
 
 ### Réparation de bugs:
