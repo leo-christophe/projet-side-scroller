@@ -38,7 +38,7 @@ fenetre.blit(image_fond, (0,0))
 import pygame
 
 class Sprite_Player(pygame.sprite.Sprite):
-    def __init__(self, longueur=32, largeur=32):
+    def __init__(self, longueur=64, largeur=64):
         super().__init__()
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("assets/player.png")
@@ -65,7 +65,8 @@ class Sprite_Player(pygame.sprite.Sprite):
         return self.rect
 
     def goJump(self, jump):
-        self.rect.y -= jump
+        if current_player.rect.colliderect(fond_plaine_plateforme_pos) == True:
+            self.rect.y -= jump
         self.y -= jump
 
         return self.rect
@@ -114,10 +115,9 @@ def redrawWindow(player, left, right):
 
 
 fond_plaine_plateforme = pygame.image.load("assets/fond_plaines_plateforme.png")
-fenetre.blit(fond_plaine_plateforme, (0, 547))
+fenetre.blit(fond_plaine_plateforme, (0, 0))
 fond_plaine_plateforme_pos = fond_plaine_plateforme.get_rect()
-fond_plaine_plateforme_pos.x = 0
-fond_plaine_plateforme_pos.y = 720
+
 
 pygame.display.flip()
 
@@ -129,6 +129,7 @@ while jeu:
     """
     if first_running == 0: #first running sert à spawn le joueur au correct endroit
         current_player.rect.y = 490
+        fond_plaine_plateforme_pos.y = 547
         first_running = 1
     ######################################################################?
     for event in pygame.event.get(): #pour quitter
@@ -151,15 +152,11 @@ while jeu:
         left = False
         current_player.goRight(marge_x)
 
-    collide = current_player.rect.colliderect(
-        fond_plaine_plateforme_pos
-                                      )
-    collide
     #current_player.rect
     #fond_plaine_plateforme_pos
     print(fond_plaine_plateforme_pos.bottom)
-    if collide == True:
-        current_player.rect.bottom = fond_plaine_plateforme.rect.top
+    if current_player.rect.colliderect(fond_plaine_plateforme_pos) == True:
+        current_player.rect.bottom = fond_plaine_plateforme_pos.top
         print("i")
 
     ######################################################################? COLLISIONS
@@ -178,11 +175,10 @@ while jeu:
         right = False                         #? Collisions du haut
         current_player.rect = current_player.rect.move(0, 10)
 
-    if current_player.rect[1] < (plateforme - 20):
+    if current_player.rect.colliderect(fond_plaine_plateforme_pos) == False:
         left = False
         right = False
-        if not(collide):
-            current_player.rect = current_player.rect.move(0, 20)
+        current_player.rect = current_player.rect.move(0, 10)
 
     """elif current_player.rect[1] >= (720 - current_player.size[1] - plateforme_principale_x): #? Collision du bas (platforme)
         left = False
@@ -196,7 +192,7 @@ while jeu:
     all_sprites.draw(fenetre)
 
     fenetre.blit(image_fond, (0,0))
-    fenetre.blit(fond_plaine_plateforme, (0, 450))
+    fenetre.blit(fond_plaine_plateforme, fond_plaine_plateforme_pos)
     fenetre.blit(current_player.image, current_player.rect)
 
     pygame.display.flip()
