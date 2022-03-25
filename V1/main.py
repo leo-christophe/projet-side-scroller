@@ -72,7 +72,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.rect.y = 720 - 150 - self.size[1]
 
         #? statistiques
-        self.speed = 1
+        self.speed = 10
         self.vie = 100
         self.att = 1
     
