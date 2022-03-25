@@ -173,7 +173,7 @@ def redrawWindow(left, right):
             fenetre.blit(current_player.image, current_player.rect)
     else:
         walkCount = 0
-
+#music loading
 music = False
 if music == True: #jouer de la musique
     mixer.music.load("assets/sounds/music/grassy_plains-darren_curtis.mp3")
