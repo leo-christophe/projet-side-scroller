@@ -72,7 +72,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.rect.y = 720 - 150 - self.size[1]
 
         #? statistiques
-        self.speed = 10
+        self.speed = 3
         self.vie = 100
         self.att = 1
     
@@ -170,15 +170,14 @@ def redrawWindow(left, right):
         elif isLookingUp:
             fenetre.blit(current_player.looking_up, pos)
         else:
-            fenetre.blit(current_player.image, pos)
+            fenetre.blit(current_player.image, current_player.rect)
     else:
         walkCount = 0
 
 music = False
-if music == True:
+if music == True: #jouer de la musique
     mixer.music.load("assets/sounds/music/grassy_plains-darren_curtis.mp3")
     mixer.music.play(-1)
-
 
 left = False
 right = False
@@ -220,7 +219,6 @@ while jeu:
     elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: #!droite
         left = False
         right = True
-        
         isLookingUp = False
         isStanding = False
         isJump = False
@@ -252,14 +250,14 @@ while jeu:
         current_player.rect = current_player.rect.move(0, 5)
 
     fenetre.blit(image_fond, (0,0))
-    redrawWindow(left, right) #animations
 
+    redrawWindow(left, right) #animations
+    
     pygame.display.flip() #rafraichissement de la fenêtre
 
     #Rafraichissement des différentes images.
-    
     fenetre.blit(fond_plaine_plateforme, fond_plaine_plateforme_pos)
-    fenetre.blit(current_player.image, current_player.rect)
+    
     clock.tick(fps) #change les fps du jeu.
     
 pygame.QUIT()
