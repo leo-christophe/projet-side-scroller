@@ -5,7 +5,8 @@
 
 # Changelog 
 ## V2:
--
+- Ajout d'un menu permettant de changer quelques paramètres ou de quitter. 
+- Ajout de sons. 
 
 ## V1:
 - Le joueur est maintenant géré à l'aide de la classe `Sprite_Player`.
@@ -51,9 +52,9 @@ Elle est gérée grace à la fonction `redrawWindow()` qui est peut être tradui
 * >`isLookingUp` pour signaler que le joueur regarde en haut.
 * >`isStanding` pour signaler que le joueur se tient juste debout.
 
-# Idées futures / Ambitions pour la V2 :
+# Idées futures / Ambitions pour la V3 :
 - Un défilement vers la gauche tel un Mario. 
 - La possibilitée de changer d'univers. (les 4 mondes) 
 - Créer des ennemis et donc un moyen de les battre.
 => cela implique un moyen de perdre donc un écran "Game Over", un moyen de mourir de chute ou lorsqu'on saute dans le vide? 
-- Ajouter un menu.
+- Ajouter un menu principal de début de jeu. 

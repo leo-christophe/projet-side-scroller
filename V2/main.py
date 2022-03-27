@@ -198,7 +198,7 @@ class Sprite_Player(pygame.sprite.Sprite):
 current_player = Sprite_Player()
 
 
-music_playing = False
+music_playing = True
 def music():
     """
     Cette fonction gère la musique du jeu. Elle prend en compte music_playing, un booléen représentant la volonté d'avoir de la musique dans le jeu et l'occupation
@@ -206,19 +206,15 @@ def music():
     Elle prend en compte la zone du joueur : pour jouer de la musique correspondant à la zone du joueur. 
     Post-Condition : La fonction retourne 1 si il y a bien un changement de musique, sinon elle retourne 0. 
     """
-    if music_playing == True:
-        if pygame.mixer.music.get_busy == False and Game_Menu.menu_displaying == False: #jouer de la musique
-            mixer.music.unload()
-            mixer.music.pause()
-            mixer.music.load(f"assets/sounds/music/{current_player.zone}/grassy_plains-darren_curtis.mp3")
-            mixer.music.play(-1)
-        elif pygame.mixer.music.get_busy == False and Game_Menu.menu_displaying == True:
-            mixer.music.unload()
-            mixer.music.pause()
-            mixer.music.load("assets/sounds/music/menu/mindfulness-relaxation-john-kensy.mp3")
-            mixer.music.play(-1)
-    else:
-        mixer.music.stop()
+    if music_playing == True and pygame.mixer.music.get_busy() == False and Game_Menu.menu_displaying == False: #jouer de la musique
+        mixer.music.pause()
+        mixer.music.unload()
+        mixer.music.load(f"assets/sounds/music/{current_player.zone}/grassy_plains-darren_curtis.mp3")
+        mixer.music.play(-1)
+        return 1
+    elif Game_Menu.menu_displaying == True and music_playing == True:
+        mixer.music.load("assets/sounds/music/menu/mindfulness-relaxation-john-kensy.mp3")
+        mixer.music.play(-1)
     return 0
 
 def bg_change(marge):
@@ -253,7 +249,6 @@ class Menu():
         """
         Méthode qui gère le menu principal. 
         """
-        music()
         if self.selection == 2:
             self.options()
         fenetre.blit(self.menu_bg, (0, 0))
@@ -267,6 +262,7 @@ class Menu():
             if event.type == pygame.KEYDOWN:
                 if event.key == K_ESCAPE:
                     self.menu_displaying = False
+                    mixer.music.stop()
                     music()
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -293,6 +289,7 @@ class Menu():
 
         if self.selection == 1:
             self.menu_displaying = False
+            mixer.music.stop()
             music()
             self.selection = 0
 
@@ -387,11 +384,13 @@ class Menu():
 
                     elif txt_o4a.collidepoint(pos_click):
                         music_playing = True
+                        mixer.music.stop()
                         music()
                         self.sound_playing()
 
                     elif txt_o4b.collidepoint(pos_click):
                         music_playing = False
+                        mixer.music.stop()
                         music()
                         self.sound_playing()
 
@@ -465,13 +464,11 @@ def jeu(fps = 60):
 
     while jeu:
         if Game_Menu.menu_displaying == False:
-            music()
             current_player.controles()
             current_player.collisions()
             redrawWindow() #animations
 
         if Game_Menu.menu_displaying == True:
-            music()
             Game_Menu.main_menu()
 
         global bgX
@@ -487,6 +484,7 @@ def jeu(fps = 60):
     pygame.quit()
 
 if __name__ == "__main__":
+    music()
     jeu()
 
 #(Des liens pour des tutos)
