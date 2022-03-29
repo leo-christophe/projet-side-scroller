@@ -1,8 +1,10 @@
 import pygame
-from pygame import K_ESCAPE, mixer
+from pygame import mixer
 from random import randint
-pygame.init()
+from level_update import Main, Plains, Desert, Mountains, Boss
 
+pygame.init()
+jeu = True
 #chargement de la fenêtre
 WIDTH = 1280
 HEIGHT = 720
@@ -11,19 +13,12 @@ fenetre = pygame.display.set_mode(taille, pygame.RESIZABLE)
 pygame.display.set_caption("Juan Adventures") 
 icon = pygame.image.load("assets/textures/player/player.png")
 pygame.display.set_icon(icon) #on change l'icone de la fenêtre
-collisions = []
-
-bg = pygame.image.load("assets/textures/background/fond_plaines_2.png").convert()
-bgX = 0
-bgX2 = 3000
-fond_plaine_plateforme = pygame.image.load("assets/textures/background/fond_plaines_plateforme.png")
-fond_plaine_plateforme_pos = fond_plaine_plateforme.get_rect()
-collisions.append(fond_plaine_plateforme_pos)
-fond_plaine_plateforme_pos.y = 546 #la position y de la plateforme qui du bas qui va servir de collision
 
 clock = pygame.time.Clock() #on va pouvoir changer les fps
 
+music_playing = False
 sounds_playing = True
+
 grass_steps = [mixer.Sound(f'assets/sounds/ambiant/grass-step-{i}.mp3') for i in range(1, 4)]
 button = mixer.Sound("assets/sounds/GUI/button.mp3")
 
@@ -55,16 +50,22 @@ class Sprite_Player(pygame.sprite.Sprite):
 
         self.size = self.image.get_size()
         self.rect = self.image.get_rect()
-        self.rect.x = self.size[0]
-        self.rect.y = 720 - 150 - self.size[1]
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.rect.x = self.width
+        self.rect.y = HEIGHT - 150 - self.size[1]
+        self.y_default = HEIGHT - 150 - self.size[1]
         self.xoffset = self.rect.x
         self.yoffset = self.rect.y
+        self.collisionp = False
 
         #? statistiques
-        self.speed = 3
+        self.speed = 7
         self.vie = 100
+        self.player_alive = True
         self.att = 1
         self.zone = 1 #? la zone du joueur
+        self.subzone = 0
 
     def goRight(self, marge = marge_x):
         """
@@ -73,7 +74,6 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         self.rect.x += marge * self.speed
-        bg_change(-marge)
         if sounds_playing == True:
             son = grass_steps[randint(0,2)]
             son.set_volume(0.25)
@@ -87,7 +87,6 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         self.rect.x -= marge * self.speed
-        bg_change(marge)
         if sounds_playing == True:
             son = grass_steps[randint(0,2)]
             son.set_volume(0.25)
@@ -102,7 +101,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         left permet de faire sauter le joueur vers la gauche et right permet de faire sauter le joueur vers la droite.
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
-        if self.rect.colliderect(fond_plaine_plateforme_pos) == 1:
+        if self.collisionp == True:
             decalement_x = 120
             if self.isLookingUp or self.isStanding:
                 self.rect.y -= jump * 1.5
@@ -158,22 +157,56 @@ class Sprite_Player(pygame.sprite.Sprite):
             self.isJump, self.isLookingUp, self.isStanding = False, False, False
             self.walkCount = 0
 
-    def collisions(self):
-        #! COLLISIONS ET GRAVITÉ
+    def test_collisions(self, plateforme_bas):
+        """Cette méthode teste la collision entre le joueur et une plateforme du bas.
+        Pré-Condition : plateforme_bas est une plateforlme"""
+        print(self.rect.bottom)
+        print(plateforme_bas.top)
+        if self.rect.left > plateforme_bas.right: #! si le joueur est trop à droite, il n'a pas de collision
+            self.collisionp = False
+            return False
 
-        if self.rect.colliderect(fond_plaine_plateforme_pos) == 1: #! Collisions d'en bas
-            self.rect.bottom = fond_plaine_plateforme_pos.top
-        else:
-            self.rect.y += 1
+        elif self.rect.left < plateforme_bas.left: #! si le joueur est trop à gauche, pas de collision.
+            self.collisionp = False
+            return False
         
-        if self.rect.x >= bg.get_width() - self.size[1]:             #! Collisions d'à droite
-            self.rect = self.rect.move(-10, 0)
+        elif self.rect.bottom <= plateforme_bas.y:
+            self.collisionp = False
+            return False
+            
+        else:
+            self.collisionp = True
+            return True
+ 
+    def collisions(self):
+        """
+        Cette méthode permet de gérer les collisions entre le joueur et l'environnement ou une plateforme. 
+        """
+        #! COLLISIONS ET GRAVITÉ
+        collisions = main_levels_class.collisions
+        indice_tab = self.rect.collidelist(collisions)
+        
+        if indice_tab != -1:
+            self.collisionp = True
+            self.test_collisions(collisions[indice_tab])
+        else:
+            self.rect.y += 2
+            self.collisionp = False
 
-        elif self.rect.x <= 0:                                       #! Collisions d'à gauche
+        if self.subzone == 0 and self.rect.x <= 0:                                       #! Collisions d'à gauche
             self.rect = self.rect.move(10, 0)
 
-        elif (self.rect.colliderect(fond_plaine_plateforme_pos)) == 0:
-            self.rect = self.rect.move(0, 5)
+        if self.rect.y > HEIGHT:
+            print("Game OVER!")
+            pygame.QUIT()
+
+        if self.rect.x >= WIDTH + 0.5 * self.width:
+            self.rect = self.rect.move(-(WIDTH + 0.5 * self.width), 0)
+            self.subzone += 1
+
+        elif self.subzone >= 1 and self.rect.x < 0:
+            self.rect = self.rect.move((WIDTH + 0.5 * self.width), 0)
+            self.subzone -= 1
 
     def soin(self, soin):
         """
@@ -195,10 +228,10 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.vie -= degats
         if self.vie < 0:
             self.vie = 0
+            self.player_alive = False
 current_player = Sprite_Player()
+main_levels_class = Main(current_player, fenetre)
 
-
-music_playing = True
 def music():
     """
     Cette fonction gère la musique du jeu. Elle prend en compte music_playing, un booléen représentant la volonté d'avoir de la musique dans le jeu et l'occupation
@@ -217,19 +250,13 @@ def music():
         mixer.music.play(-1)
     return 0
 
-def bg_change(marge):
-    global bgX
-    global bgX2
-
-    bgX += marge*(current_player.speed)**2.5
-    bgX2 +=  marge*(current_player.speed)**2.5
-
 def draw_text(text, font, color, surface, x, y):
     textobj = font.render(text, 1, color)
     textrect = textobj.get_rect()
     textrect.center = (x, y)
     surface.blit(textobj, textrect)
     return textrect
+
 
 class Menu():
     """
@@ -260,7 +287,7 @@ class Menu():
 
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == K_ESCAPE:
+                if event.key == pygame.K_ESCAPE:
                     self.menu_displaying = False
                     mixer.music.stop()
                     music()
@@ -295,14 +322,16 @@ class Menu():
 
         elif self.selection == 2:
             self.options()
-            self.selection = 2
 
         elif self.selection == 3:
-            pygame.quit()
             self.selection = 0
+            pygame.quit()
             quit()
 
     def options(self):
+        """
+        options est la méthode qui gère le menu des options. 
+        """
         global fenetre
         global HEIGHT
         global WIDTH
@@ -346,7 +375,7 @@ class Menu():
 
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if event.key == K_ESCAPE:
+                if event.key == pygame.K_ESCAPE:
                     self.selection = 0
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -407,52 +436,16 @@ class Menu():
                         self.sound_playing()
     
     def sound_playing(self):
+        """
+        Petite méthode qui permet de jouer le son du clique de bouton si le son est activé. 
+        """
         global sounds_playing
         if sounds_playing:
             button.play()
 
 Game_Menu = Menu()
 
-def redrawWindow():
-    """
-    Cette fonction sert à faire les animations.
-    Pré-Conditions : left et right sont des booléens indiquant la position du joueur (vers la droite ou vers la gauche)
-    """
 
-    fenetre.fill('black')
-    fenetre.blit(bg, (0,0))
-    fenetre.blit(fond_plaine_plateforme, (bgX, fond_plaine_plateforme_pos.y))
-
-    pos = (current_player.rect.x, current_player.rect.y)
-
-    anim_left = current_player.left
-    anim_right = current_player.right
-    anim_jump = current_player.isJump
-    anim_lookup = current_player.isLookingUp
-
-    if current_player.walkCount <= len(current_player.left_assets)-1: 
-        if anim_left: #on utilise chaque élément du tableau left_assets
-            fenetre.blit(
-                current_player.left_assets[current_player.walkCount], 
-                pos)
-            current_player.walkCount +=1
-
-        elif anim_right: #on utilise chaque élément du tableau right_assets
-            fenetre.blit(
-                current_player.right_assets[current_player.walkCount], 
-                pos)
-            current_player.walkCount += 1
-
-        elif anim_jump:
-            fenetre.blit(current_player.jumping, pos)
-
-        elif anim_lookup:
-            fenetre.blit(current_player.looking_up, pos)
-        else:
-            fenetre.blit(current_player.image, current_player.rect)
-        
-    else:
-        current_player.walkCount = 0
 
 
 def jeu(fps = 60):
@@ -460,29 +453,22 @@ def jeu(fps = 60):
     Cette fonction est la fonction principale du jeu, elle contient la boucle qui le fait tourner. Elle prend en argument fps, qui sera habituellement à 60. 
     Cette boucle infinie sert à faire marcher le jeu en continu. Tant que ALT-F4 ou que la fenêtre n'est pas fermée, le jeu continuera de marcher dès l'exécution du programme.
     """
-    jeu = True
-
     while jeu:
         if Game_Menu.menu_displaying == False:
-            current_player.controles()
-            current_player.collisions()
-            redrawWindow() #animations
+            #! si on n'est pas dans le menu, il y a le jeu qui s'affiche. 
+            main_levels_class.choose(current_player)
+            current_player.controles() #update controles
+            current_player.collisions() #update collisions
 
-        if Game_Menu.menu_displaying == True:
+
+        else:
+            #! si on est dans le menu, on l'affiche
             Game_Menu.main_menu()
-
-        global bgX
-        global bgX2
-        if bgX <  bg.get_width() * -1:
-            bgX = bg.get_width()
-        if bgX2 < bg.get_width() * -1:
-            bgX2 = bg.get_width()
 
         pygame.display.flip() #rafraichissement de la fenêtre
 
         clock.tick(fps) #change les fps du jeu.
-    pygame.quit()
-
+    
 if __name__ == "__main__":
     music()
     jeu()

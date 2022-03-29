@@ -5,8 +5,8 @@
 
 # Changelog 
 ## V2:
-- Ajout d'un menu permettant de changer quelques paramètres ou de quitter. 
-- Ajout de sons. 
+- Ajout d'un menu permettant de changer quelques paramètres tel que l'activation de la musique ou du son, la résolution ou de quitter. 
+- Ajout d'un son lorsqu'on clique sur un bouton du menu. 
 
 ## V1:
 - Le joueur est maintenant géré à l'aide de la classe `Sprite_Player`.
