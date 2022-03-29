@@ -160,8 +160,7 @@ class Sprite_Player(pygame.sprite.Sprite):
     def test_collisions(self, plateforme_bas):
         """Cette méthode teste la collision entre le joueur et une plateforme du bas.
         Pré-Condition : plateforme_bas est une plateforlme"""
-        print(self.rect.bottom)
-        print(plateforme_bas.top)
+
         if self.rect.left > plateforme_bas.right: #! si le joueur est trop à droite, il n'a pas de collision
             self.collisionp = False
             return False
@@ -169,11 +168,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         elif self.rect.left < plateforme_bas.left: #! si le joueur est trop à gauche, pas de collision.
             self.collisionp = False
             return False
-        
-        elif self.rect.bottom <= plateforme_bas.y:
-            self.collisionp = False
-            return False
-            
+
         else:
             self.collisionp = True
             return True

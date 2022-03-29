@@ -5,6 +5,8 @@
 
 # Changelog 
 ## V2:
+- Ajout des classes pour charger les niveaux. 
+- Changement du système de collisions.
 - Ajout d'un menu permettant de changer quelques paramètres tel que l'activation de la musique ou du son, la résolution ou de quitter. 
 - Ajout d'un son lorsqu'on clique sur un bouton du menu. 
 

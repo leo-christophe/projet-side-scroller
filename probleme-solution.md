@@ -29,3 +29,8 @@
 - En implémentant mon idée de menu, j'ai essayé d'implémenter un menu d'options, pour changer des paramètres. A ce moment la, je n'ai pas réussi à configurer la musique correctement et elle a tout simplement arrêté d'être jouée.
 - J'ai trouvée la solution en revenant en arrière et en repensant le concept du code. J'ai remarqué cela en testant : la fonction music marche parfaitement donc c'est quand on l'appel qu'il faut changer. Solution : l'appeler quand on change un paramètre : musique activée, musique désactivée. 
 - Il fallait appeler la fonction music() au bon moment. 
+
+### Problème 7 : Les collisions.
+- Les collisions ne marchent pas du tout. 
+- J'ai trouvé cette solution en revenant beaucoup de fois sur mon code, en retestant...
+- Il faut tester si le joueur est sur la plateforme correctement. 
