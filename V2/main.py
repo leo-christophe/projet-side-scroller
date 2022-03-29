@@ -1,30 +1,26 @@
 import pygame
 from pygame import mixer
 from random import randint
-pygame.init()
+from level_update import Main, Plains, Desert, Mountains, Boss
 
+pygame.init()
+jeu = True
 #chargement de la fenêtre
-WIDTH = 1080
+WIDTH = 1280
 HEIGHT = 720
 taille = (WIDTH, HEIGHT)
-fenetre = pygame.display.set_mode(taille)   
+fenetre = pygame.display.set_mode(taille, pygame.RESIZABLE)   
 pygame.display.set_caption("Juan Adventures") 
 icon = pygame.image.load("assets/textures/player/player.png")
 pygame.display.set_icon(icon) #on change l'icone de la fenêtre
-collisions = []
-
-bg = pygame.image.load("assets/textures/background/fond_plaines_2.png")
-bgX = 0
-bgX2 = 3000
-fond_plaine_plateforme = pygame.image.load("assets/textures/background/fond_plaines_plateforme.png")
-fond_plaine_plateforme_pos = fond_plaine_plateforme.get_rect()
-collisions.append(fond_plaine_plateforme_pos)
-fond_plaine_plateforme_pos.y = 546 #la position y de la plateforme qui du bas qui va servir de collision
 
 clock = pygame.time.Clock() #on va pouvoir changer les fps
 
-grass_sound = True
+music_playing = False
+sounds_playing = True
+
 grass_steps = [mixer.Sound(f'assets/sounds/ambiant/grass-step-{i}.mp3') for i in range(1, 4)]
+button = mixer.Sound("assets/sounds/GUI/button.mp3")
 
 class Sprite_Player(pygame.sprite.Sprite):
     """
@@ -48,25 +44,28 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.right_assets = [pygame.image.load(f'assets/textures/player/player_right_{x}.png') for x in range(1, 19)]
         self.left_assets = [pygame.image.load(f'assets/textures/player/player_left_{x}.png') for x in range(1, 19)]
         
-        self.left = False
-        self.right = False
-        self.isJump = False
-        self.isLookingUp = False
-        self.isStanding = False
+        self.left, self.right, self.isJump, self.isLookingUp, self.isStanding = False, False, False, False, False
+
         self.walkCount = 0
 
         self.size = self.image.get_size()
         self.rect = self.image.get_rect()
-        self.rect.x = self.size[0]
-        self.rect.y = 720 - 150 - self.size[1]
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.rect.x = self.width
+        self.rect.y = HEIGHT - 150 - self.size[1]
+        self.y_default = HEIGHT - 150 - self.size[1]
         self.xoffset = self.rect.x
         self.yoffset = self.rect.y
+        self.collisionp = False
 
         #? statistiques
-        self.speed = 3
+        self.speed = 7
         self.vie = 100
+        self.player_alive = True
         self.att = 1
         self.zone = 1 #? la zone du joueur
+        self.subzone = 0
 
     def goRight(self, marge = marge_x):
         """
@@ -75,7 +74,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         self.rect.x += marge * self.speed
-        if grass_sound == True:
+        if sounds_playing == True:
             son = grass_steps[randint(0,2)]
             son.set_volume(0.25)
             son.play()
@@ -88,7 +87,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         self.rect.x -= marge * self.speed
-        if grass_sound == True:
+        if sounds_playing == True:
             son = grass_steps[randint(0,2)]
             son.set_volume(0.25)
             son.play()
@@ -102,7 +101,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         left permet de faire sauter le joueur vers la gauche et right permet de faire sauter le joueur vers la droite.
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
-        if self.rect.colliderect(fond_plaine_plateforme_pos) == 1:
+        if self.collisionp == True:
             decalement_x = 120
             if self.isLookingUp or self.isStanding:
                 self.rect.y -= jump * 1.5
@@ -113,7 +112,7 @@ class Sprite_Player(pygame.sprite.Sprite):
                     decalement_x = 0
                 self.rect.y -= jump
                 self.rect.x += decalement_x
-            if grass_sound == True:
+            if sounds_playing == True:
                 son = mixer.Sound(f'assets/sounds/ambiant/grass_jump.mp3')
                 son.set_volume(0.25)
                 son.play()
@@ -123,69 +122,86 @@ class Sprite_Player(pygame.sprite.Sprite):
         #! dans ces evenements, on ne peut pas rester appuyer sur la touche pour répéter l'évenement, il ne se produit qu'une fois à chaque touche appuyée. 
         for event in pygame.event.get(): #!pour quitter
             if event.type == pygame.QUIT:
-                jeu = False
                 pygame.quit()
                 quit()
             
             elif event.type == pygame.KEYDOWN: #! sauter
                 if (event.key == pygame.K_UP) or (event.key == pygame.K_SPACE):
-                    current_player.isJump = True
-                    current_player.walkCount = 0
-                    current_player.goJump()
+                    self.left, self.right, self.isJump, self.isLookingUp, self.isStanding = False, False, True, False, False
+                    self.walkCount = 0
+                    self.goJump()
+                elif event.key == pygame.K_ESCAPE:
+                    Game_Menu.menu_displaying = True
+                    music()
+
                 else:
-                    current_player.isJump = False
-                    current_player.walkCount = 0
+                    self.isJump = False
+                    self.walkCount = 0
         
         #! dans ces evenements, on peut rester avec la touche appuyée pour continuer l'evenement qui s'arrête une fois que la touche n'est plus appuyée. 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] or keys[pygame.K_q]: #!gauche
-            current_player.right = False
-            current_player.left = True
-            current_player.isLookingUp = False
-            current_player.isStanding = False
-            current_player.isJump = False
+            self.left, self.right, self.isJump, self.isLookingUp, self.isStanding = True, False, False, False, False
 
-            current_player.goLeft(Sprite_Player.marge_x)
+            self.goLeft(Sprite_Player.marge_x)
 
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: #!droite
-            current_player.left = False
-            current_player.right = True
-            current_player.isLookingUp = False
-            current_player.isStanding = False
-            current_player.isJump = False
+            self.left, self.right, self.isJump, self.isLookingUp, self.isStanding = False, True, False, False, False
 
-            current_player.goRight(Sprite_Player.marge_x)
+            self.goRight(Sprite_Player.marge_x)
 
         elif keys[pygame.K_z]: #!regarder en haut (animation)
-            current_player.isLookingUp = True
-            current_player.isStanding = False
-            current_player.right = False
-            current_player.left = False
-            current_player.isJump = False
+            self.left, self.right, self.isJump, self.isLookingUp, self.isStanding = False, False, False, True, False
 
         else:
-            current_player.isStanding = False
-            current_player.isLookingUp = False
-            current_player.isJump = False
-            current_player.walkCount = 0
+            self.isJump, self.isLookingUp, self.isStanding = False, False, False
+            self.walkCount = 0
 
+    def test_collisions(self, plateforme_bas):
+        """Cette méthode teste la collision entre le joueur et une plateforme du bas.
+        Pré-Condition : plateforme_bas est une plateforlme"""
+
+        if self.rect.left > plateforme_bas.right: #! si le joueur est trop à droite, il n'a pas de collision
+            self.collisionp = False
+            return False
+
+        elif self.rect.left < plateforme_bas.left: #! si le joueur est trop à gauche, pas de collision.
+            self.collisionp = False
+            return False
+
+        else:
+            self.collisionp = True
+            return True
+ 
     def collisions(self):
+        """
+        Cette méthode permet de gérer les collisions entre le joueur et l'environnement ou une plateforme. 
+        """
         #! COLLISIONS ET GRAVITÉ
-        if current_player.rect.colliderect(fond_plaine_plateforme_pos) == 1: #! Collisions d'en bas
-            current_player.rect.bottom = fond_plaine_plateforme_pos.top
-        else:
-            current_player.rect.y -= 1
+        collisions = main_levels_class.collisions
+        indice_tab = self.rect.collidelist(collisions)
         
-        if current_player.rect.x >= bg.get_width() - current_player.size[1]:             #! Collisions d'à droite
-            current_player.rect = current_player.rect.move(-10, 0)
+        if indice_tab != -1:
+            self.collisionp = True
+            self.test_collisions(collisions[indice_tab])
+        else:
+            self.rect.y += 2
+            self.collisionp = False
 
-        elif current_player.rect.x <= 0:                                       #! Collisions d'à gauche
-            current_player.rect = current_player.rect.move(10, 0)
+        if self.subzone == 0 and self.rect.x <= 0:                                       #! Collisions d'à gauche
+            self.rect = self.rect.move(10, 0)
 
-        elif (current_player.rect.colliderect(fond_plaine_plateforme_pos)) == False or (
-            current_player.rect.x > fond_plaine_plateforme_pos.get_size()[0] or current_player.rect.x < 0
-        ): #! Gravité
-            current_player.rect = current_player.rect.move(0, 5)
+        if self.rect.y > HEIGHT:
+            print("Game OVER!")
+            pygame.QUIT()
+
+        if self.rect.x >= WIDTH + 0.5 * self.width:
+            self.rect = self.rect.move(-(WIDTH + 0.5 * self.width), 0)
+            self.subzone += 1
+
+        elif self.subzone >= 1 and self.rect.x < 0:
+            self.rect = self.rect.move((WIDTH + 0.5 * self.width), 0)
+            self.subzone -= 1
 
     def soin(self, soin):
         """
@@ -207,10 +223,10 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.vie -= degats
         if self.vie < 0:
             self.vie = 0
+            self.player_alive = False
 current_player = Sprite_Player()
+main_levels_class = Main(current_player, fenetre)
 
-
-music_playing = True
 def music():
     """
     Cette fonction gère la musique du jeu. Elle prend en compte music_playing, un booléen représentant la volonté d'avoir de la musique dans le jeu et l'occupation
@@ -218,53 +234,213 @@ def music():
     Elle prend en compte la zone du joueur : pour jouer de la musique correspondant à la zone du joueur. 
     Post-Condition : La fonction retourne 1 si il y a bien un changement de musique, sinon elle retourne 0. 
     """
-    if music_playing == True and pygame.mixer.music.get_busy: #jouer de la musique
+    if music_playing == True and pygame.mixer.music.get_busy() == False and Game_Menu.menu_displaying == False: #jouer de la musique
+        mixer.music.pause()
+        mixer.music.unload()
         mixer.music.load(f"assets/sounds/music/{current_player.zone}/grassy_plains-darren_curtis.mp3")
         mixer.music.play(-1)
         return 1
+    elif Game_Menu.menu_displaying == True and music_playing == True:
+        mixer.music.load("assets/sounds/music/menu/mindfulness-relaxation-john-kensy.mp3")
+        mixer.music.play(-1)
     return 0
 
+def draw_text(text, font, color, surface, x, y):
+    textobj = font.render(text, 1, color)
+    textrect = textobj.get_rect()
+    textrect.center = (x, y)
+    surface.blit(textobj, textrect)
+    return textrect
 
-def redrawWindow():
+
+class Menu():
     """
-    Cette fonction sert à faire les animations.
-    Pré-Conditions : left et right sont des booléens indiquant la position du joueur (vers la droite ou vers la gauche)
+    La Classe menu permet de faire la gestion des menus accessibles avec la touche "ÉCHAP".
     """
+    def __init__(self):
+        """
+        Méthode d'initialisation de la classe menu.
+        """
+        self.selection = 0
+        self.font_name = pygame.font.Font("assets/font/CreamyPeach.TTF", 30)
+        self.menu_bg = pygame.image.load("assets/textures/background/menu.png").convert()
+        self.cross = pygame.image.load("assets/textures/GUI/cross.png").convert_alpha()
+        self.menu_displaying = False
 
-    fenetre.fill('black')
-    fenetre.blit(bg, (0,0))
-    fenetre.blit(fond_plaine_plateforme, (bgX, fond_plaine_plateforme_pos.y))
+    def main_menu(self):
+        """
+        Méthode qui gère le menu principal. 
+        """
+        if self.selection == 2:
+            self.options()
+        fenetre.blit(self.menu_bg, (0, 0))
 
-    pos = (current_player.rect.x, current_player.rect.y)
+        txt_r = draw_text("Menu principal", pygame.font.Font("assets/font/CreamyPeach.TTF", 50), "white", fenetre, WIDTH / 2, 100)
+        txt_r2 = draw_text("Retour au jeu", self.font_name, "white", fenetre, WIDTH / 2, 200)
+        txt_r3 = draw_text("Options", self.font_name, "white", fenetre, WIDTH / 2, 300)
+        txt_r4 = draw_text("Quitter", self.font_name, "white", fenetre, WIDTH / 2, 400)    
 
-    anim_left = current_player.left
-    anim_right = current_player.right
-    anim_jump = current_player.isJump
-    anim_lookup = current_player.isLookingUp
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.menu_displaying = False
+                    mixer.music.stop()
+                    music()
 
-    if current_player.walkCount <= len(current_player.left_assets)-1: 
-        if anim_left: #on utilise chaque élément du tableau left_assets
-            fenetre.blit(
-                current_player.left_assets[current_player.walkCount], 
-                pos)
-            current_player.walkCount +=1
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_presses = pygame.mouse.get_pressed()
+                if mouse_presses[0]:
+                    pos_click = pygame.mouse.get_pos()
+                    if pos_click[0] > 540 and pos_click[0] < 729:
+                        pygame.mixer.Sound.stop(button)
+                        if pos_click[1] >= 157 and pos_click[1] < 246:
+                            self.selection = 1
+                            self.sound_playing()
 
-        elif anim_right: #on utilise chaque élément du tableau right_assets
-            fenetre.blit(
-                current_player.right_assets[current_player.walkCount], 
-                pos)
-            current_player.walkCount += 1
+                        elif pos_click[1] >= 246 and pos_click[1] < 345:
+                            self.selection = 2
+                            self.sound_playing()
 
-        elif anim_jump:
-            fenetre.blit(current_player.jumping, pos)
+                        elif pos_click[1] >= 345 and pos_click[1] < 437:
+                            self.selection = 3
+                            self.sound_playing()
 
-        elif anim_lookup:
-            fenetre.blit(current_player.looking_up, pos)
-        else:
-            fenetre.blit(current_player.image, current_player.rect)
+            elif event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        if self.selection == 1:
+            self.menu_displaying = False
+            mixer.music.stop()
+            music()
+            self.selection = 0
+
+        elif self.selection == 2:
+            self.options()
+
+        elif self.selection == 3:
+            self.selection = 0
+            pygame.quit()
+            quit()
+
+    def options(self):
+        """
+        options est la méthode qui gère le menu des options. 
+        """
+        global fenetre
+        global HEIGHT
+        global WIDTH
+        global music_playing
+        global sounds_playing
+        fenetre.blit(self.menu_bg, (0, 0))
+        txt_o = draw_text("Menu principal", pygame.font.Font("assets/font/CreamyPeach.TTF", 50), "white", fenetre, WIDTH / 2, 100)
+        txt_o2 = draw_text(f"Résolution actuelle : {WIDTH, HEIGHT}", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 200)
+        txt_o2a = draw_text("480x720", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH * 1/5, 225)
+        txt_o2b = draw_text("720x1280", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH * 2/5, 225)
+        txt_o2c = draw_text("1080x1920", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH * 3/5, 225)
+        txt_o2d = draw_text("1440x2560", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH * 4/5, 225)
+        txt_o3 = draw_text("Plein écran", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH / 2, 250)
+        txt_o4 = draw_text("Musiques :", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 300)
+        txt_o4a = draw_text("OUI", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (3/5), 300)
+        txt_o4b = draw_text("NON", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (4/5), 300)
+        txt_o5 = draw_text("Sons :", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 350)
+        txt_o5a = draw_text("OUI", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (3/5), 350)
+        txt_o5b = draw_text("NON", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (4/5), 350)
+        txt_o6 = draw_text("Controles", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH /2, 400)
+        txt_o6a = draw_text("Aller à droite : D / Flèche de droite ", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH /2, 425)
+        txt_o6b = draw_text("Aller à gauche : Q / Flèche de gauche", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH /2, 450)
+        txt_o6c = draw_text("Sauter : barre d'espace / Flèche du haut", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH /2, 475)
+        txt_o6d = draw_text("Regarder en l'air : Z", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH /2, 500)
+        txt_o7 = draw_text("RETOUR", pygame.font.Font("assets/font/CreamyPeach.TTF", 25), "white", fenetre, WIDTH /2, 600)
         
-    else:
-        current_player.walkCount = 0
+        cross_rect = self.cross.get_rect()
+        if music_playing == True:
+            cross_rect = (txt_o4a.x, txt_o4a.y)
+            fenetre.blit(self.cross, cross_rect)
+        else:
+            cross_rect = (txt_o4b.x, txt_o4b.y)
+            fenetre.blit(self.cross, cross_rect)
+
+        if sounds_playing == True:
+            cross_rect = (txt_o5a.x, txt_o5a.y)
+            fenetre.blit(self.cross, cross_rect)
+        else:
+            cross_rect = (txt_o5b.x, txt_o5b.y)
+            fenetre.blit(self.cross, cross_rect)
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.selection = 0
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_presses = pygame.mouse.get_pressed()
+                if mouse_presses[0]:
+                    pos_click = pygame.mouse.get_pos()
+                    pygame.mixer.Sound.stop(button)
+                    if txt_o3.collidepoint(pos_click):
+                        fenetre = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+                        self.sound_playing()
+
+                    elif txt_o2a.collidepoint(pos_click):
+                        HEIGHT = 480
+                        WIDTH = 720
+                        fenetre = pygame.display.set_mode((WIDTH, HEIGHT))
+                        self.sound_playing()
+
+                    elif txt_o2b.collidepoint(pos_click):
+                        HEIGHT = 720
+                        WIDTH = 1280
+                        fenetre = pygame.display.set_mode((WIDTH, HEIGHT))
+                        self.sound_playing()
+
+                    elif txt_o2c.collidepoint(pos_click):
+                        HEIGHT = 1080
+                        WIDTH = 1920
+                        fenetre = pygame.display.set_mode((WIDTH, HEIGHT))
+                        self.sound_playing()
+
+                    elif txt_o2d.collidepoint(pos_click):
+                        HEIGHT = 1440
+                        WIDTH = 2560
+                        fenetre = pygame.display.set_mode((WIDTH, HEIGHT))
+                        self.sound_playing()
+
+                    elif txt_o4a.collidepoint(pos_click):
+                        music_playing = True
+                        mixer.music.stop()
+                        music()
+                        self.sound_playing()
+
+                    elif txt_o4b.collidepoint(pos_click):
+                        music_playing = False
+                        mixer.music.stop()
+                        music()
+                        self.sound_playing()
+
+                    elif txt_o5a.collidepoint(pos_click):
+                        sounds_playing = True
+                        self.sound_playing()
+
+                    elif txt_o5b.collidepoint(pos_click):
+                        sounds_playing = False
+                        self.sound_playing()
+
+                    elif txt_o7.collidepoint(pos_click):
+                        self.selection = 0
+                        self.sound_playing()
+    
+    def sound_playing(self):
+        """
+        Petite méthode qui permet de jouer le son du clique de bouton si le son est activé. 
+        """
+        global sounds_playing
+        if sounds_playing:
+            button.play()
+
+Game_Menu = Menu()
+
+
 
 
 def jeu(fps = 60):
@@ -272,26 +448,22 @@ def jeu(fps = 60):
     Cette fonction est la fonction principale du jeu, elle contient la boucle qui le fait tourner. Elle prend en argument fps, qui sera habituellement à 60. 
     Cette boucle infinie sert à faire marcher le jeu en continu. Tant que ALT-F4 ou que la fenêtre n'est pas fermée, le jeu continuera de marcher dès l'exécution du programme.
     """
-    jeu = True
-
     while jeu:
+        if Game_Menu.menu_displaying == False:
+            #! si on n'est pas dans le menu, il y a le jeu qui s'affiche. 
+            main_levels_class.choose(current_player)
+            current_player.controles() #update controles
+            current_player.collisions() #update collisions
 
-        current_player.controles()
-        current_player.collisions()
 
-        global bgX
-        global bgX2
-        if bgX <  bg.get_width() * -1:
-            bgX = bg.get_width()
-        if bgX2 < bg.get_width() * -1:
-            bgX2 = bg.get_width()
+        else:
+            #! si on est dans le menu, on l'affiche
+            Game_Menu.main_menu()
 
-        redrawWindow() #animations
-        
         pygame.display.flip() #rafraichissement de la fenêtre
 
         clock.tick(fps) #change les fps du jeu.
-    pygame.quit()
+    
 if __name__ == "__main__":
     music()
     jeu()
