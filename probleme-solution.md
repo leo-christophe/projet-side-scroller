@@ -34,3 +34,7 @@
 - Les collisions ne marchent pas du tout. 
 - J'ai trouvé cette solution en revenant beaucoup de fois sur mon code, en retestant...
 - Il faut tester si le joueur est sur la plateforme correctement. 
+
+### Problème 8 : Problème de croix.
+- La croix de selection dans le menu est vraiment mal placée.
+- J'ai modifié la taille de la croix pour qu'elle soit plus petite et je la place à droite du texte au lieu d'au dessus. 

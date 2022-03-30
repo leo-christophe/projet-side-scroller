@@ -5,10 +5,15 @@
 
 # Changelog 
 ## V2:
+- Ajout d'un écran "Game Over" lorsque le joueur perd, accompagné d'un son. 
+- Ajout d'une classe spécifique aux sons : ils sont maintenant gérés avec une classe et des méthodes. 
 - Ajout des classes pour charger les niveaux. 
 - Changement du système de collisions.
-- Ajout d'un menu permettant de changer quelques paramètres tel que l'activation de la musique ou du son, la résolution ou de quitter. 
-- Ajout d'un son lorsqu'on clique sur un bouton du menu. 
+- Ajout d'un menu permettant de changer quelques paramètres tel que l'activation de la musique ou du son, la résolution, les fps ou de quitter. 
+- Ajout d'un son lorsque l'on clique sur un bouton du menu. 
+
+### Réparation de bugs (V2):
+- Les collisions ne marchaient pas. 
 
 ## V1:
 - Le joueur est maintenant géré à l'aide de la classe `Sprite_Player`.
@@ -23,7 +28,7 @@
 - Modification du fonctionnement du saut. Si le joueur regarde à droite, il va sauter vers la droite, s'il regarde à gauche, il va sauter vers la gauche, sinon, s'il regarde en l'air (z) ou s'il reste normal (debout), il saute tout droit. 
 - Ajout de documentations, de commentaires, debut de la fiche probleme-solution, optimisation du code.
 
-### Réparation de bugs:
+### Réparation de bugs (V1):
 - Saut à l'infini.
 ---
 ## V0:
@@ -40,6 +45,13 @@ _Le programme est construit en 2 grandes parties :_
 1. **L'initialisation** : Dans cette première partie, les variables, fonctions, classes sont initialisées. ça permet de "désengorger" la boucle principale du jeu qui tournera beaucoup de fois pendant plus ou moins longtemps. Dans cette partie, on a une classe : `Sprite_Player` qui gère le joueur, une fonction `redrawWindow` qui gère l'animation et on initialise plein de variables qui serviront pour la 2ème partie. 
 2. **La boucle principale** : Elle permet le fonctionnement du jeu. En répétant la même boucle beaucoup de fois en une seconde, on fait en sorte de mettre à jour les affichages, après avoir fait bouger le personnage par exemple. On procède à chaque tour de boucle de la même façon : on change certaines choses comme la position du joueur ou sa texture, on met à jour, ça s'affiche. 
 
+### Quelques explications :
+* **Rect** : Un "Rect" est composé des coordonnées d'une image (x, y), de sa longueur et de sa largeur. Les Rect vont nous servir pour tester les collisions, par exemple.
+
+* **Sprite** : Un "Sprite" est un module de Pygame qui permet de gérer et dessiner des objets de jeu plus facilement.
+
+* **Groups** : Un "Groupe" contient plusieurs sprite. 
+
 ### Les images :
 Il faut savoir que positionner les images n'est pas si facile. En effet, les positions sont assez spéciales. 
 ![](https://i.imgur.com/3ldvk3N.png)
@@ -54,8 +66,15 @@ Elle est gérée grace à la fonction `redrawWindow()` qui est peut être tradui
 * >`isLookingUp` pour signaler que le joueur regarde en haut.
 * >`isStanding` pour signaler que le joueur se tient juste debout.
 
-# Idées futures / Ambitions pour la V3 :
-- Un défilement vers la gauche tel un Mario. 
+### Les collisions :
+- Concernant les collisions, une méthode venant de pygame nous permet de les tester : pygame.rect.colliderect() Il y a plusieurs types de méthodes testant la collisions comme :
+- pygame.collidedict() pour tester la collision entre 2 "Rects" dont 1 qui est présent dans un dictionnaire. 
+- pygame.collidepoint pour tester la collision entre un Rect et un point de coordonnée (x, y)
+- pygame.collide_circle pour tester la collision dans un rayon. 
+- pygame.Rect.collidelist pour tester la collision entre un Rect et un élément d'un tableau de Rect. 
+> pygame.Rect.collidelistall et pygame.Rect.collidedictall ressemblent beaucoup à leur formes collidelist et collidedict sauf que ces méthodes testent tout les éléments du tableau ou du dictionnaire en même temps. 
+
+# Idées futures / Ambitions pour la V3 : 
 - La possibilitée de changer d'univers. (les 4 mondes) 
 - Créer des ennemis et donc un moyen de les battre.
 => cela implique un moyen de perdre donc un écran "Game Over", un moyen de mourir de chute ou lorsqu'on saute dans le vide? 
