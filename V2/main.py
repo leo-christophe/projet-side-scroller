@@ -16,11 +16,60 @@ pygame.display.set_icon(icon) #on change l'icone de la fenêtre
 
 clock = pygame.time.Clock() #on va pouvoir changer les fps
 
-music_playing = False
-sounds_playing = True
 
-grass_steps = [mixer.Sound(f'assets/sounds/ambiant/grass-step-{i}.mp3') for i in range(1, 4)]
-button = mixer.Sound("assets/sounds/GUI/button.mp3")
+class Sounds():
+    """
+    Cette classe permet de gérer les sons.
+    """
+    def __init__(self):
+        """
+        Méthode d'initialisation de la classe Sounds qui repertorie les sons. 
+        """
+        self.music_playing = False
+        self.sounds_playing = True
+        self.grass_steps = [mixer.Sound(f'assets/sounds/ambiant/grass-step-{i}.mp3') for i in range(1, 4)]
+        self.button = mixer.Sound("assets/sounds/GUI/button.mp3")
+        self.game_over = mixer.Sound("assets/sounds/music/menu/game_over.mp3")
+        
+
+    def music(self):
+        """
+        Cette méthode gère la musique du jeu. Elle prend en compte music_playing, un booléen représentant la volonté d'avoir de la musique dans le jeu et l'occupation
+        de la "queue musicale". C'est-à-dire, que, si il y a déjà une musique en cours, on ne peut pas jouer de musique. 
+        Elle prend en compte la zone du joueur : pour jouer de la musique correspondant à la zone du joueur. 
+        Post-Condition : La fonction retourne 1 si il y a bien un changement de musique, sinon elle retourne 0. 
+        """
+        music_playing = self.music_playing
+        if music_playing == True and pygame.mixer.music.get_busy() == False and Game_Menu.menu_displaying == False: #jouer de la musique
+            mixer.music.pause()
+            mixer.music.unload()
+            mixer.music.load(f"assets/sounds/music/{current_player.zone}/grassy_plains-darren_curtis.mp3")
+            mixer.music.play(-1)
+            return 1
+        elif Game_Menu.menu_displaying == True and music_playing == True:
+            mixer.music.load("assets/sounds/music/menu/mindfulness-relaxation-john-kensy.mp3")
+            mixer.music.play(-1)
+        return 0
+
+    def play_sound_list(self, sounds = "grass", index = 0, volume = 0.25):
+        """
+        Joue le son d'un tableau. 
+        Pré-Conditions : sounds est une chaine de caractères indiquant le son à jouer, index l'indice du tableau à choisir, volume est un float : le volume du son qui va être joué.
+        """
+        sounds_playing = self.sounds_playing
+        if sounds_playing == True:
+            if sounds == "grass":
+                son = self.grass_steps[randint(0,2)]
+            son.set_volume(volume)
+            son.play()
+    
+    def play_sound(self, sound, volume = 0.25):
+        """ Joue un son unique."""
+        sounds_playing = self.sounds_playing
+        if sounds_playing == True:
+            sound.set_volume(volume)
+            sound.play()        
+Game_Sounds = Sounds()
 
 class Sprite_Player(pygame.sprite.Sprite):
     """
@@ -74,10 +123,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         self.rect.x += marge * self.speed
-        if sounds_playing == True:
-            son = grass_steps[randint(0,2)]
-            son.set_volume(0.25)
-            son.play()
+        Game_Sounds.play_sound_list(sounds = "grass", index = randint(0, 2))
         return self.rect
 
     def goLeft(self, marge = marge_x):
@@ -87,11 +133,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         self.rect.x -= marge * self.speed
-        if sounds_playing == True:
-            son = grass_steps[randint(0,2)]
-            son.set_volume(0.25)
-            son.play()
-        
+        Game_Sounds.play_sound_list(sounds = "grass", index = randint(0, 2))
         return self.rect
 
     def goJump(self, jump = 60):
@@ -112,7 +154,7 @@ class Sprite_Player(pygame.sprite.Sprite):
                     decalement_x = 0
                 self.rect.y -= jump
                 self.rect.x += decalement_x
-            if sounds_playing == True:
+            if Game_Sounds.sounds_playing == True:
                 son = mixer.Sound(f'assets/sounds/ambiant/grass_jump.mp3')
                 son.set_volume(0.25)
                 son.play()
@@ -132,7 +174,7 @@ class Sprite_Player(pygame.sprite.Sprite):
                     self.goJump()
                 elif event.key == pygame.K_ESCAPE:
                     Game_Menu.menu_displaying = True
-                    music()
+                    Game_Sounds.music()
 
                 else:
                     self.isJump = False
@@ -192,8 +234,7 @@ class Sprite_Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(10, 0)
 
         if self.rect.y > HEIGHT:
-            print("Game OVER!")
-            pygame.QUIT()
+            return Game_Menu.game_over()
 
         if self.rect.x >= WIDTH + 0.5 * self.width:
             self.rect = self.rect.move(-(WIDTH + 0.5 * self.width), 0)
@@ -227,25 +268,17 @@ class Sprite_Player(pygame.sprite.Sprite):
 current_player = Sprite_Player()
 main_levels_class = Main(current_player, fenetre)
 
-def music():
-    """
-    Cette fonction gère la musique du jeu. Elle prend en compte music_playing, un booléen représentant la volonté d'avoir de la musique dans le jeu et l'occupation
-    de la "queue musicale". C'est-à-dire, que, si il y a déjà une musique en cours, on ne peut pas jouer de musique. 
-    Elle prend en compte la zone du joueur : pour jouer de la musique correspondant à la zone du joueur. 
-    Post-Condition : La fonction retourne 1 si il y a bien un changement de musique, sinon elle retourne 0. 
-    """
-    if music_playing == True and pygame.mixer.music.get_busy() == False and Game_Menu.menu_displaying == False: #jouer de la musique
-        mixer.music.pause()
-        mixer.music.unload()
-        mixer.music.load(f"assets/sounds/music/{current_player.zone}/grassy_plains-darren_curtis.mp3")
-        mixer.music.play(-1)
-        return 1
-    elif Game_Menu.menu_displaying == True and music_playing == True:
-        mixer.music.load("assets/sounds/music/menu/mindfulness-relaxation-john-kensy.mp3")
-        mixer.music.play(-1)
-    return 0
 
 def draw_text(text, font, color, surface, x, y):
+    """
+    Cette fonction permet de dessiner un texte.
+    Pré-Conditions : text est une chaine de caractères représentant le texte à afficher.
+    font est une chaine de caractères représentant le chemin à emprunter pour trouver le fichier de la police (en TTF).
+    color est la couleur du texte
+    surface correspond à la surface sur laquelle le texte va être dessiner
+    x représente l'axe des abscisses et y l'axe des ordonnées. 
+    Post-Condition : le rect du texte est renvoyé, textrect. 
+    """
     textobj = font.render(text, 1, color)
     textrect = textobj.get_rect()
     textrect.center = (x, y)
@@ -267,6 +300,16 @@ class Menu():
         self.cross = pygame.image.load("assets/textures/GUI/cross.png").convert_alpha()
         self.menu_displaying = False
 
+    def game_over(self):
+        Game_Sounds.game_over.set_volume(0.2)
+        Game_Sounds.game_over.play()
+        fenetre.fill('black')
+        draw_text("GAME   OVER", pygame.font.Font("assets/font/GhostOfTheWildWest.TTF", 60), "white", fenetre, WIDTH / 2, 100)
+        draw_text("Bougez la souris pour quitter le jeu", pygame.font.Font("assets/font/GhostOfTheWildWest.TTF", 30), "white", fenetre, WIDTH / 2, 250)
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEMOTION:
+                pygame.quit()
+
     def main_menu(self):
         """
         Méthode qui gère le menu principal. 
@@ -285,25 +328,24 @@ class Menu():
                 if event.key == pygame.K_ESCAPE:
                     self.menu_displaying = False
                     mixer.music.stop()
-                    music()
+                    Game_Sounds.music()
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_presses = pygame.mouse.get_pressed()
                 if mouse_presses[0]:
                     pos_click = pygame.mouse.get_pos()
-                    if pos_click[0] > 540 and pos_click[0] < 729:
-                        pygame.mixer.Sound.stop(button)
-                        if pos_click[1] >= 157 and pos_click[1] < 246:
-                            self.selection = 1
-                            self.sound_playing()
+                    pygame.mixer.Sound.stop(Game_Sounds.button)
+                    if txt_r2.collidepoint(pos_click):
+                        self.selection = 1
+                        self.sound_playing()
 
-                        elif pos_click[1] >= 246 and pos_click[1] < 345:
-                            self.selection = 2
-                            self.sound_playing()
+                    elif txt_r3.collidepoint(pos_click):
+                        self.selection = 2
+                        self.sound_playing()
 
-                        elif pos_click[1] >= 345 and pos_click[1] < 437:
-                            self.selection = 3
-                            self.sound_playing()
+                    elif txt_r4.collidepoint(pos_click):
+                        self.selection = 3
+                        self.sound_playing()
 
             elif event.type == pygame.QUIT:
                 pygame.quit()
@@ -312,7 +354,7 @@ class Menu():
         if self.selection == 1:
             self.menu_displaying = False
             mixer.music.stop()
-            music()
+            Game_Sounds.music()
             self.selection = 0
 
         elif self.selection == 2:
@@ -330,8 +372,9 @@ class Menu():
         global fenetre
         global HEIGHT
         global WIDTH
-        global music_playing
-        global sounds_playing
+        global fps
+        music_playing = Game_Sounds.music_playing
+        sounds_playing = Game_Sounds.sounds_playing
         fenetre.blit(self.menu_bg, (0, 0))
         txt_o = draw_text("Menu principal", pygame.font.Font("assets/font/CreamyPeach.TTF", 50), "white", fenetre, WIDTH / 2, 100)
         txt_o2 = draw_text(f"Résolution actuelle : {WIDTH, HEIGHT}", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 200)
@@ -340,9 +383,15 @@ class Menu():
         txt_o2c = draw_text("1080x1920", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH * 3/5, 225)
         txt_o2d = draw_text("1440x2560", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH * 4/5, 225)
         txt_o3 = draw_text("Plein écran", pygame.font.Font("assets/font/CreamyPeach.TTF", 16), "gray", fenetre, WIDTH / 2, 250)
-        txt_o4 = draw_text("Musiques :", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 300)
-        txt_o4a = draw_text("OUI", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (3/5), 300)
-        txt_o4b = draw_text("NON", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (4/5), 300)
+        txt_v3 = draw_text("FPS / IPS", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 300)
+        txt_v3a = draw_text("15", pygame.font.Font("assets/font/CreamyPeach.TTF", 20), "gray", fenetre, WIDTH * (6/11), 300)
+        txt_v3b = draw_text("30", pygame.font.Font("assets/font/CreamyPeach.TTF", 20), "gray", fenetre, WIDTH * (7/11), 300)
+        txt_v3c = draw_text("45", pygame.font.Font("assets/font/CreamyPeach.TTF", 20), "gray", fenetre, WIDTH * (8/11), 300)
+        txt_v3d = draw_text("60", pygame.font.Font("assets/font/CreamyPeach.TTF", 20), "gray", fenetre, WIDTH * (9/11), 300)
+        txt_v3e = draw_text("144", pygame.font.Font("assets/font/CreamyPeach.TTF", 20), "gray", fenetre, WIDTH * (10/11), 300)
+        txt_o4 = draw_text("Musiques :", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 325)
+        txt_o4a = draw_text("OUI", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (3/5), 325)
+        txt_o4b = draw_text("NON", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (4/5), 325)
         txt_o5 = draw_text("Sons :", pygame.font.Font("assets/font/CreamyPeach.TTF", 23), "white", fenetre, WIDTH / 2, 350)
         txt_o5a = draw_text("OUI", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (3/5), 350)
         txt_o5b = draw_text("NON", pygame.font.Font("assets/font/CreamyPeach.TTF", 15), "gray", fenetre, WIDTH * (4/5), 350)
@@ -355,18 +404,73 @@ class Menu():
         
         cross_rect = self.cross.get_rect()
         if music_playing == True:
-            cross_rect = (txt_o4a.x, txt_o4a.y)
+            cross_rect.x = txt_o4a.x
+            cross_rect.y = txt_o4a.y
+            cross_rect.left = cross_rect.right + 5
             fenetre.blit(self.cross, cross_rect)
         else:
-            cross_rect = (txt_o4b.x, txt_o4b.y)
+            cross_rect.x = txt_o4b.x
+            cross_rect.y = txt_o4b.y
+            cross_rect.left = cross_rect.right + 5
             fenetre.blit(self.cross, cross_rect)
 
         if sounds_playing == True:
-            cross_rect = (txt_o5a.x, txt_o5a.y)
+            cross_rect.x = txt_o5a.x
+            cross_rect.y = txt_o5a.y
+            cross_rect.left = cross_rect.right + 5
             fenetre.blit(self.cross, cross_rect)
         else:
-            cross_rect = (txt_o5b.x, txt_o5b.y)
+            cross_rect.x = txt_o5b.x
+            cross_rect.y = txt_o5b.y
+            cross_rect.left = cross_rect.right + 5
             fenetre.blit(self.cross, cross_rect)
+
+        if fps == 15:
+            cross_rect.x = txt_v3a.x
+            cross_rect.y = txt_v3a.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif fps == 30:
+            cross_rect.x = txt_v3b.x
+            cross_rect.y = txt_v3b.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif fps == 45:
+            cross_rect.x = txt_v3c.x
+            cross_rect.y = txt_v3c.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif fps == 60:
+            cross_rect.x = txt_v3d.x
+            cross_rect.y = txt_v3d.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif fps == 144:
+            cross_rect.x = txt_v3e.x
+            cross_rect.y = txt_v3e.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+
+        if HEIGHT == 480:
+            cross_rect.x = txt_o2a.x
+            cross_rect.y = txt_o2a.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif HEIGHT == 720:
+            cross_rect.x = txt_o2b.x
+            cross_rect.y = txt_o2b.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif HEIGHT == 1080:
+            cross_rect.x = txt_o2c.x
+            cross_rect.y = txt_o2c.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
+        elif HEIGHT == 1440:
+            cross_rect.x = txt_o2d.x
+            cross_rect.y = txt_o2d.y
+            cross_rect.left = cross_rect.right + 5
+            fenetre.blit(self.cross, cross_rect) 
 
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -377,7 +481,7 @@ class Menu():
                 mouse_presses = pygame.mouse.get_pressed()
                 if mouse_presses[0]:
                     pos_click = pygame.mouse.get_pos()
-                    pygame.mixer.Sound.stop(button)
+                    pygame.mixer.Sound.stop(Game_Sounds.button)
                     if txt_o3.collidepoint(pos_click):
                         fenetre = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
                         self.sound_playing()
@@ -406,24 +510,44 @@ class Menu():
                         fenetre = pygame.display.set_mode((WIDTH, HEIGHT))
                         self.sound_playing()
 
+                    elif txt_v3a.collidepoint(pos_click):
+                        fps = 15
+                        self.sound_playing()
+                        
+                    elif txt_v3b.collidepoint(pos_click):
+                        fps = 30
+                        self.sound_playing()
+
+                    elif txt_v3c.collidepoint(pos_click):
+                        fps = 45
+                        self.sound_playing()
+
+                    elif txt_v3d.collidepoint(pos_click):
+                        fps = 60
+                        self.sound_playing()   
+
+                    elif txt_v3e.collidepoint(pos_click):
+                        fps = 144
+                        self.sound_playing()
+
                     elif txt_o4a.collidepoint(pos_click):
-                        music_playing = True
+                        Game_Sounds.music_playing = True
                         mixer.music.stop()
-                        music()
+                        Game_Sounds.music()
                         self.sound_playing()
 
                     elif txt_o4b.collidepoint(pos_click):
-                        music_playing = False
+                        Game_Sounds.music_playing = False
                         mixer.music.stop()
-                        music()
+                        Game_Sounds.music()
                         self.sound_playing()
 
                     elif txt_o5a.collidepoint(pos_click):
-                        sounds_playing = True
+                        Game_Sounds.sounds_playing = True
                         self.sound_playing()
 
                     elif txt_o5b.collidepoint(pos_click):
-                        sounds_playing = False
+                        Game_Sounds.sounds_playing = False
                         self.sound_playing()
 
                     elif txt_o7.collidepoint(pos_click):
@@ -434,16 +558,14 @@ class Menu():
         """
         Petite méthode qui permet de jouer le son du clique de bouton si le son est activé. 
         """
-        global sounds_playing
+        sounds_playing = Game_Sounds.sounds_playing
         if sounds_playing:
-            button.play()
+            Game_Sounds.button.play()
 
 Game_Menu = Menu()
 
-
-
-
-def jeu(fps = 60):
+fps = 60
+def jeu():
     """
     Cette fonction est la fonction principale du jeu, elle contient la boucle qui le fait tourner. Elle prend en argument fps, qui sera habituellement à 60. 
     Cette boucle infinie sert à faire marcher le jeu en continu. Tant que ALT-F4 ou que la fenêtre n'est pas fermée, le jeu continuera de marcher dès l'exécution du programme.
@@ -462,10 +584,11 @@ def jeu(fps = 60):
 
         pygame.display.flip() #rafraichissement de la fenêtre
 
+        global fps
         clock.tick(fps) #change les fps du jeu.
     
 if __name__ == "__main__":
-    music()
+    Game_Sounds.music()
     jeu()
 
 #(Des liens pour des tutos)
