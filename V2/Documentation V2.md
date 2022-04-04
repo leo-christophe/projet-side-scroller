@@ -5,15 +5,18 @@
 
 # Changelog 
 ## V2:
+- Changement du système de saut qui est maintenant en cloche. 
 - Ajout d'un écran "Game Over" lorsque le joueur perd, accompagné d'un son. 
 - Ajout d'une classe spécifique aux sons : ils sont maintenant gérés avec une classe et des méthodes. 
 - Ajout des classes pour charger les niveaux. 
-- Changement du système de collisions.
+- Changement du système de collisions / Essai.
 - Ajout d'un menu permettant de changer quelques paramètres tel que l'activation de la musique ou du son, la résolution, les fps ou de quitter. 
 - Ajout d'un son lorsque l'on clique sur un bouton du menu. 
 
 ### Réparation de bugs (V2):
-- Les collisions ne marchaient pas. 
+- Les collisions ne marchaient pas du tout en réalité.
+- Le saut paraît presque non naturel.
+- Lors d'un saut, le joueur s'enfonçait sous le sol, cela faussait les collisions. 
 
 ## V1:
 - Le joueur est maintenant géré à l'aide de la classe `Sprite_Player`.
