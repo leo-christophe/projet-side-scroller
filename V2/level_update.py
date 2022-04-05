@@ -56,10 +56,10 @@ class Parameters():
     Parameters est la classe qui repertorie tout les paramètres générals du jeu. 
     """
     def __init__(self):
-        self.HEIGHT = 720
-        self.WIDTH = 1280
+        self.height = 720
+        self.width = 1280
         self.fps = 60
-        self.fenetre = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)   
+        self.fenetre = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)   
         self.caption = pygame.display.set_caption("Juan Adventures") 
         self.icon = pygame.display.set_icon(pygame.image.load("assets/textures/GUI/icon.png")) #on change l'icone de la fenêtre
         self.clock = pygame.time.Clock() 
@@ -86,7 +86,7 @@ class Plains():
     def __init__(self, subzone, fenetre, current_player):
         self.bg = pygame.image.load("assets/textures/background/fond_plaines_2.png").convert()
         self.dirt_platform = pygame.image.load("assets/textures/props/dirt_platform.png")
-        self.dirt_wall = pygame.image.load("assets/textures/props/dirt_wall.png")
+        self.dirt_wall = pygame.image.load("assets/textures/props/dirt_wall.png").convert()
         self.light_platform = pygame.image.load("assets/textures/props/light_dirt_platform.png")
 
         self.fenetre = fenetre
@@ -94,14 +94,15 @@ class Plains():
         self.subzone = subzone
         self.last_zone = 8
 
-        self.plat1 = platform_creation(self.dirt_platform, 0, Game_Parameters.HEIGHT - self.dirt_platform.get_height())
-        self.plat2 = platform_creation(self.dirt_platform, self.plat1.rect.width + 80, Game_Parameters.HEIGHT - self.dirt_platform.get_height())
-        self.light_plat = platform_creation(self.light_platform, 100, Game_Parameters.HEIGHT - self.dirt_platform.get_height() - 80)
-        self.light_plat2 = platform_creation(self.light_platform, 150, Game_Parameters.HEIGHT - self.dirt_platform.get_height() - 100)
+        self.plat1 = platform_creation(self.dirt_platform, 0, Game_Parameters.height - self.dirt_platform.get_height())
+        self.plat2 = platform_creation(self.dirt_platform, self.plat1.rect.width + 80, Game_Parameters.height - self.dirt_platform.get_height())
+        self.light_plat = platform_creation(self.light_platform, 100, Game_Parameters.height - self.dirt_platform.get_height() - 80)
+        self.light_plat2 = platform_creation(self.light_platform, 150, Game_Parameters.height - self.dirt_platform.get_height() - 100)
+        self.dirt_wallrect = platform_creation(self.dirt_wall, x=300, y=Game_Parameters.height - self.dirt_platform.get_height() - 20)
 
         #On créer une liste de collisions
         self.collisions_list_plains = [
-        [self.plat1.rect, self.plat2.rect, self.light_plat.rect, self.light_plat2.rect],
+        [self.plat1.rect, self.plat2.rect, self.dirt_wallrect.rect],
         [self.plat1.rect],
         [self.plat1.rect, self.plat2.rect],
         [self.plat1.rect, self.plat2.rect],
@@ -125,12 +126,10 @@ class Plains():
         self.window_refreshing(fenetre)
         fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
         fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
-        fenetre.blit(self.light_platform, (self.light_plat.rect.x, self.light_plat.rect.y))   
-        fenetre.blit(self.light_platform, (self.light_plat2.rect.x, self.light_plat2.rect.y))   
+        fenetre.blit(self.dirt_wall, (self.dirt_wallrect.rect.x, self.dirt_wallrect.rect.y))   
 
         
     def subzone_1(self):
-        print(self.collisions)
         self.collisions = self.collisions_list_plains[1]
         fenetre = self.fenetre
         self.window_refreshing(fenetre)
