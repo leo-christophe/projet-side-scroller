@@ -106,7 +106,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.fps = Game_Parameters.fps
 
         #? statistiques
-        self.speed = 3
+        self.speed = 5
         self.vie = 100
         self.player_alive = True
         self.gameover = False
@@ -160,7 +160,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         Game_Sounds.play_sound_list(sounds = "grass", index = randint(0, 2))
         return self.rect
 
-    def goJump(self, jump = 250):
+    def goJump(self):
         """
         La méthode goJump permet de faire sauter le joueur de jump pixels. 
         Pré-Condition : Elle prend en argument jump, qui sera pratiquemment tout le temps à 150.
@@ -168,6 +168,8 @@ class Sprite_Player(pygame.sprite.Sprite):
         Post-Condition : Elle retourne self.rect, la position du joueur. 
         """
         if self.collisionp == True:
+            if self.vely < -10:
+                self.vely = 10
             self.isJump = True
             Game_Sounds.play_sound(mixer.Sound(f'assets/sounds/ambiant/grass_jump.mp3'))
         return self.rect
@@ -220,23 +222,23 @@ class Sprite_Player(pygame.sprite.Sprite):
         collisions = main_levels_class.collisions
         indice_tab = self.rect.collidelist(collisions)
         element_collision = collisions[indice_tab]
-
         #! collisions avec plateformes
-        if self.rect.colliderect(collisions[indice_tab]): #! s'il y a collision
+        if self.rect.colliderect(collisions[indice_tab]): #! s'il y a collision            
+            self.isJump = False
+            
             if self.rect.bottom > element_collision.top: #! si le joueur est en dessous du top
-                if  self.rect.left <= element_collision.right:
-                    self.rect.left = element_collision.right + 1
+                if  self.rect.left >= element_collision.right:
+                    self.rect.left = element_collision.right  + 1
                     self.collisionp = False
 
                 if self.rect.right <= element_collision.left:
                     self.rect.right = element_collision.left - 1
                     self.collisionp = False
-
+                    
             else:
                 self.rect.bottom = element_collision.top 
                 self.collisionp = True
 
-        #! calcul du saut
         if self.isJump == True: #AJOUTER COLLISION CHECK HERE rect_j 
             self.rect.y -= self.vely * (2 + self.fps/60)
             self.vely -= 1
@@ -266,11 +268,11 @@ class Sprite_Player(pygame.sprite.Sprite):
 
 
         if self.rect.centerx >= Game_Parameters.width:
-            self.rect = self.rect.move(-(Game_Parameters.width + 0.5 * self.width), 0)
+            self.rect.center = (0, self.rect.y)
             self.subzone += 1
 
-        elif self.subzone >= 1 and self.rect.x < 0:
-            self.rect = self.rect.move((Game_Parameters.width + 0.5 * self.width), 0)
+        elif self.subzone >= 1 and self.rect.centerx <= 0:
+            self.rect.center = (Game_Parameters.width, self.rect.y) 
             self.subzone -= 1
 
 
@@ -297,7 +299,7 @@ class Sprite_Player(pygame.sprite.Sprite):
             self.player_alive = False
 
 current_player = Sprite_Player()
-main_levels_class = Main(current_player, Game_Parameters.fenetre)
+
 
 
 def draw_text(text, font, color, surface, x, y):
@@ -347,6 +349,20 @@ class Menu():
                 if event.type == pygame.MOUSEMOTION:
                     pygame.quit()
                     gameover = False
+                    return -1
+            pygame.display.flip()
+
+    def temporary_end(self):
+        temp = True
+        while temp == True:
+            Game_Parameters.fenetre.fill('white')
+            draw_text("FIN DU JEU (temporaire)", pygame.font.Font("assets/font/GhostOfTheWildWest.TTF", 60), "red", Game_Parameters.fenetre, Game_Parameters.width / 2, 100)
+            draw_text("La fin sera normalement différente (si j'y arrive ahah)", pygame.font.Font("assets/font/GhostOfTheWildWest.TTF", 15), "red", Game_Parameters.fenetre, Game_Parameters.width / 2, 200)
+            draw_text("Bougez la souris pour quitter le jeu", pygame.font.Font("assets/font/GhostOfTheWildWest.TTF", 30), "red", Game_Parameters.fenetre, Game_Parameters.width / 2, 300)
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEMOTION:
+                    pygame.quit()
+                    temp = False
                     return -1
             pygame.display.flip()
 
@@ -585,7 +601,7 @@ class Menu():
         if sounds_playing:
             Game_Sounds.button.play()
 Game_Menu = Menu()
-
+main_levels_class = Main(current_player, Game_Parameters.fenetre, Game_Menu)
 def jeu():
     """
     Cette fonction est la fonction principale du jeu, elle contient la boucle qui le fait tourner. Elle prend en argument fps, qui sera habituellement à 60. 

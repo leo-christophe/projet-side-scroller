@@ -14,6 +14,7 @@
 - Ajout d'un son lorsque l'on clique sur un bouton du menu. 
 
 ### Réparation de bugs (V2):
+- Les collisions sur les côtés ne marchaient pas du tout et on était téléportés au dessus des plateformes. 
 - Les collisions ne marchaient pas du tout en réalité.
 - Le saut paraît presque non naturel.
 - Lors d'un saut, le joueur s'enfonçait sous le sol, cela faussait les collisions. 

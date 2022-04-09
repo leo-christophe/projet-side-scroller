@@ -38,9 +38,6 @@ def redrawWindow(fenetre, current_player):
 
         elif anim_jump:
             fenetre.blit(current_player.jumping, pos)
-        
-        elif current_player.isfalling:
-            fenetre.blit(current_player.jumping, pos)
 
         elif anim_lookup:
             fenetre.blit(current_player.looking_up, pos)
@@ -83,7 +80,7 @@ class Plains():
     """
     Cette classe permet de gérer toutes les subzones de la zone "Plaines". 
     """
-    def __init__(self, subzone, fenetre, current_player):
+    def __init__(self, subzone, fenetre, current_player, menu):
         self.bg = pygame.image.load("assets/textures/background/fond_plaines_2.png").convert()
         self.dirt_platform = pygame.image.load("assets/textures/props/dirt_platform.png")
         self.dirt_wall = pygame.image.load("assets/textures/props/dirt_wall.png").convert()
@@ -91,6 +88,7 @@ class Plains():
 
         self.fenetre = fenetre
         self.player = current_player
+        self.Game_Menu = menu
         self.subzone = subzone
         self.last_zone = 8
 
@@ -98,12 +96,12 @@ class Plains():
         self.plat2 = platform_creation(self.dirt_platform, self.plat1.rect.width + 80, Game_Parameters.height - self.dirt_platform.get_height())
         self.light_plat = platform_creation(self.light_platform, 100, Game_Parameters.height - self.dirt_platform.get_height() - 80)
         self.light_plat2 = platform_creation(self.light_platform, 150, Game_Parameters.height - self.dirt_platform.get_height() - 100)
-        self.dirt_wallrect = platform_creation(self.dirt_wall, x=300, y=Game_Parameters.height - self.dirt_platform.get_height() - 20)
+        #self.dirt_wallrect = platform_creation(self.dirt_wall, x=300, y=Game_Parameters.height - self.dirt_platform.get_height() - 20)
 
-        #On créer une liste de collisions
+        #On créer une liste de collisions avec chaque indice étant une collision.
         self.collisions_list_plains = [
-        [self.plat1.rect, self.plat2.rect, self.dirt_wallrect.rect],
-        [self.plat1.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
         [self.plat1.rect, self.plat2.rect],
         [self.plat1.rect, self.plat2.rect],
         [self.plat1.rect, self.plat2.rect],
@@ -119,14 +117,13 @@ class Plains():
         fenetre.blit(self.bg, (0, 0))
         redrawWindow(self.fenetre, self.player)
 
-
     def subzone_0(self):
         self.collisions = self.collisions_list_plains[0]
         fenetre = self.fenetre
         self.window_refreshing(fenetre)
         fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
         fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
-        fenetre.blit(self.dirt_wall, (self.dirt_wallrect.rect.x, self.dirt_wallrect.rect.y))   
+        #fenetre.blit(self.dirt_wall, (self.dirt_wallrect.rect.x, self.dirt_wallrect.rect.y))   
 
         
     def subzone_1(self):
@@ -134,63 +131,96 @@ class Plains():
         fenetre = self.fenetre
         self.window_refreshing(fenetre)
         fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_2(self):
         self.collisions = self.collisions_list_plains[2]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
+        self.window_refreshing(fenetre)
         fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_3(self):
         self.collisions = self.collisions_list_plains[3]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
-        fenetre.blit(self.fond_plaine_plateforme, self.plat1.rect)
+        self.window_refreshing(fenetre)
+        fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_4(self):
         self.collisions = self.collisions_list_plains[4]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
-        fenetre.blit(self.fond_plaine_plateforme, self.fond_plaine_plateforme_pos)
+        self.window_refreshing(fenetre)
+        fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_5(self):
         self.collisions = self.collisions_list_plains[5]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
-        fenetre.blit(self.fond_plaine_plateforme, self.fond_plaine_plateforme_pos)
+        self.window_refreshing(fenetre)
+        fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_6(self):
         self.collisions = self.collisions_list_plains[6]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
-        fenetre.blit(self.fond_plaine_plateforme, self.fond_plaine_plateforme_pos)
+        self.window_refreshing(fenetre)
+        fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_7(self):
         self.collisions = self.collisions_list_plains[7]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
-        fenetre.blit(self.fond_plaine_plateforme, self.fond_plaine_plateforme_pos)
+        self.window_refreshing(fenetre)
+        fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
 
     def subzone_8(self):
         self.collisions = self.collisions_list_plains[8]
         fenetre = self.fenetre
-        fenetre.blit(self.bg, (0, 0))
-        redrawWindow(self.fenetre, self.player)
-        fenetre.blit(self.fond_plaine_plateforme, self.fond_plaine_plateforme_pos)
+        self.window_refreshing(fenetre)
+        fenetre.blit(self.dirt_platform, (self.plat1.rect.x, self.plat1.rect.y))   
+        fenetre.blit(self.dirt_platform, (self.plat2.rect.x, self.plat2.rect.y))   
+        if self.player.rect.x > Game_Parameters.width:
+            return self.Game_Menu.temporary_end()
 
 class Mountains():
     """
     Cette classe permet de gérer toutes les subzones de la zone "Montagnes". 
     """
-    def __init__(self, subzone, fenetre, current_player):
+    def __init__(self, subzone, fenetre, current_player, menu):
         self.zone = 2
-        self.collisions = []
+        self.bg = pygame.image.load("assets/textures/background/fond_plaines_2.png").convert()
+        self.dirt_platform = pygame.image.load("assets/textures/props/dirt_platform.png")
+        self.dirt_wall = pygame.image.load("assets/textures/props/dirt_wall.png").convert()
+        self.light_platform = pygame.image.load("assets/textures/props/light_dirt_platform.png")
+
+        self.fenetre = fenetre
+        self.player = current_player
+        self.Game_Menu = menu
+        self.subzone = subzone
+        self.last_zone = 8
+
+        self.plat1 = platform_creation(self.dirt_platform, 0, Game_Parameters.height - self.dirt_platform.get_height())
+        self.plat2 = platform_creation(self.dirt_platform, self.plat1.rect.width + 80, Game_Parameters.height - self.dirt_platform.get_height())
+        self.light_plat = platform_creation(self.light_platform, 100, Game_Parameters.height - self.dirt_platform.get_height() - 80)
+        self.light_plat2 = platform_creation(self.light_platform, 150, Game_Parameters.height - self.dirt_platform.get_height() - 100)
+        #self.dirt_wallrect = platform_creation(self.dirt_wall, x=300, y=Game_Parameters.height - self.dirt_platform.get_height() - 20)
+
+        #On créer une liste de collisions avec chaque indice étant une collision.
+        self.collisions_list_mountains = [
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect],
+        [self.plat1.rect, self.plat2.rect]
+        ]
+
+        self.collisions = self.collisions_list_mountains[0]
 
     def subzone_1(self):
         pass
@@ -272,14 +302,14 @@ class Main():
     """
     La Classe Main() est la classe qui repertorie et contrôle les niveaux.
     """
-    def __init__(self, current_player, fenetre):
+    def __init__(self, current_player, fenetre, menu):
         subzone = current_player.subzone
-        self.Plains_Levels = Plains(subzone, fenetre, current_player)
+        self.Plains_Levels = Plains(subzone, fenetre, current_player, menu)
         self.Desert_Levels = Desert(subzone, fenetre, current_player)
-        self.Mountains_Levels = Mountains(subzone, fenetre, current_player)
+        self.Mountains_Levels = Mountains(subzone, fenetre, current_player, menu)
         self.Hell_Levels = Hell(subzone, fenetre, current_player)
         self.Boss_Level = Boss()
-
+        self.menu = menu
         
         self.collisions = []
 
@@ -314,6 +344,7 @@ class Main():
                 zone_name.subzone_8()
             "eval(f'zone_name.subzone_{subzonep}()') #! eval permet de transformer une chaine de caractère en code. "
             if subzonep > self.Plains_Levels.last_zone:
+                return self.menu.temporary_end()
                 current_player.zone = 2
                 current_player.subzone = 0
 
