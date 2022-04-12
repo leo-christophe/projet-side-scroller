@@ -104,7 +104,7 @@ class Sprite_Player(pygame.sprite.Sprite):
         self.dx = 0
         self.dy = 0
         self.fps = Game_Parameters.fps
-
+        self.width, self.height = Game_Parameters.width, Game_Parameters.height
         #? statistiques
         self.speed = 5
         self.vie = 100
@@ -174,72 +174,13 @@ class Sprite_Player(pygame.sprite.Sprite):
             Game_Sounds.play_sound(mixer.Sound(f'assets/sounds/ambiant/grass_jump.mp3'))
         return self.rect
 
-    def controles(self):
-        #! dans ces evenements, on ne peut pas rester appuyer sur la touche pour répéter l'évenement, il ne se produit qu'une fois à chaque touche appuyée. 
-        for event in pygame.event.get(): #!pour quitter
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            
-            elif event.type == pygame.KEYDOWN: #! sauter
-                if (event.key == pygame.K_UP) or (event.key == pygame.K_SPACE):
-                    self.walkCount = 0
-
-                    self.goJump()
-                elif event.key == pygame.K_ESCAPE:
-                    Game_Menu.menu_displaying = True
-                    Game_Sounds.music()
-
-                else:
-                    self.walkCount = 0
-        
-        #! dans ces evenements, on peut rester avec la touche appuyée pour continuer l'evenement qui s'arrête une fois que la touche n'est plus appuyée. 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_q]: #!gauche
-            self.left, self.right, self.isLookingUp, self.isStanding, self.isfalling = True, False, False, False, False
-
-            self.dx = Sprite_Player.marge_x
-            self.goLeft(Sprite_Player.marge_x)
-
-        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: #!droite
-            self.left, self.right, self.isLookingUp, self.isStanding, self.isfalling = False, True, False, False, False
-
-            self.dx = Sprite_Player.marge_x
-            self.goRight(Sprite_Player.marge_x)
-
-        elif keys[pygame.K_z]: #!regarder en haut (animation)
-            self.left, self.right, self.isLookingUp, self.isStanding,  self.isfalling = False, False, True, False, False
-
-        else:
-            self.isLookingUp, self.isStanding = False, False
-            self.walkCount = 0
-
-    def update(self):
+    def check_jump(self):
         """
-        Cette méthode permet de gérer les collisions entre le joueur et l'environnement ou une plateforme. 
+        check_jump est la méthode qui permet de "faire" le saut du joueur. Prenant en compte sa vélocité, elle permet de calculer ses déplacements en hauteur.
         """
-        width, height = Game_Parameters.width, Game_Parameters.height
         collisions = main_levels_class.collisions
-        indice_tab = self.rect.collidelist(collisions)
-        element_collision = collisions[indice_tab]
-        #! collisions avec plateformes
-        if self.rect.colliderect(collisions[indice_tab]): #! s'il y a collision            
-            self.isJump = False
-            
-            if self.rect.bottom > element_collision.top: #! si le joueur est en dessous du top
-                if  self.rect.left >= element_collision.right:
-                    self.rect.left = element_collision.right  + 1
-                    self.collisionp = False
 
-                if self.rect.right <= element_collision.left:
-                    self.rect.right = element_collision.left - 1
-                    self.collisionp = False
-                    
-            else:
-                self.rect.bottom = element_collision.top 
-                self.collisionp = True
-
-        if self.isJump == True: #AJOUTER COLLISION CHECK HERE rect_j 
+        if self.isJump == True: 
             self.rect.y -= self.vely * (2 + self.fps/60)
             self.vely -= 1
             # Réinitialisation de la velocité
@@ -255,26 +196,109 @@ class Sprite_Player(pygame.sprite.Sprite):
             else:
                 self.rect.bottom += 10
 
-        #si le joueur atteint la limite tout à gauche
-        if self.subzone == 0 and self.rect.x <= 0:
-            self.rect = self.rect.move(10, 0)
+    def controles(self):
+        """
+        La méthode controles permet de vérifier si un bouton est appuyé : si le joueur appuie sur echap : il affiche un menu, s'il appuie sur la flèche de gauche,
+        il va à gauche...
+        Cette méthode est répétée dans la boucle principale du jeu pour vérifier à chaque tour de boucle. 
+        """
+        #? dans ces evenements, on ne peut pas rester appuyer sur la touche pour répéter l'évenement, il ne se produit qu'une fois à chaque touche appuyée. 
+        for event in pygame.event.get(): 
+            #pour quitter
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            
+            #pour sauter
+            elif event.type == pygame.KEYDOWN: 
+                if (event.key == pygame.K_UP) or (event.key == pygame.K_SPACE):
+                    self.walkCount = 0
 
-        #si le joueur arrive en dessous de l'écran
-        if self.rect.y > Game_Parameters.height and self.gameover == False:
+                    self.goJump()
+                elif event.key == pygame.K_ESCAPE:
+                    Game_Menu.menu_displaying = True
+                    Game_Sounds.music()
+
+                else:
+                    self.walkCount = 0
+        
+        #? dans ces evenements, on peut rester avec la touche appuyée pour continuer l'evenement qui s'arrête une fois que la touche n'est plus appuyée. 
+        keys = pygame.key.get_pressed()
+        #pour aller à gauche
+        if keys[pygame.K_LEFT] or keys[pygame.K_q]: 
+            self.left, self.right, self.isLookingUp, self.isStanding, self.isfalling = True, False, False, False, False
+
+            self.dx = Sprite_Player.marge_x
+            self.goLeft(Sprite_Player.marge_x)
+
+        #pour aller à droite
+        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: 
+            self.left, self.right, self.isLookingUp, self.isStanding, self.isfalling = False, True, False, False, False
+
+            self.dx = Sprite_Player.marge_x
+            self.goRight(Sprite_Player.marge_x)
+
+        #pour regarder en haut
+        elif keys[pygame.K_z]: 
+            self.left, self.right, self.isLookingUp, self.isStanding,  self.isfalling = False, False, True, False, False
+
+        else:
+            self.isLookingUp, self.isStanding = False, False
+            self.walkCount = 0
+
+    def update(self):
+        """
+        Cette méthode est exécutée dans la boucle à chaque fois si le joueur n'est pas dans un menu. Elle contient tout les éléments qui ont besoin d'être
+        appelé régulièrement.
+        """
+        collisions = main_levels_class.collisions
+        indice_tab = self.rect.collidelist(collisions)
+        element_collision = collisions[indice_tab]
+        
+        #Collisions avec plateformes
+        if self.rect.colliderect(collisions[indice_tab]):          
+            self.isJump = False
+            
+            #si le joueur n'est pas en capacité d'atterir sur la plateforme et qu'il y a collision.
+            if self.rect.bottom > element_collision.top: 
+                if  self.rect.left >= element_collision.right:
+                    self.rect.left = element_collision.right  + 1
+                    
+
+                if self.rect.right <= element_collision.left:
+                    self.rect.right = element_collision.left - 1
+
+                #Il n'y a pas collision si le joueur ne peut pas atterir : il tombe.
+                self.collisionp = False    
+            else:
+                #S'il est en capacité d'atterir, le bas du joueur est égal au haut de la plateforme.
+                self.rect.bottom = element_collision.top 
+                self.collisionp = True
+
+        #on verifie si il y a saut du joueur
+        self.check_jump()
+
+        #si le joueur atteint la limite tout à gauche (du début)
+        if self.subzone == 0: 
+            if self.rect.x <= 0:
+                self.rect = self.rect.move(10, 0)
+
+        #si le joueur arrive en dessous de l'écran, game over!
+        if self.rect.bottom > Game_Parameters.height and not(self.gameover):
             self.gameover = True
             self.player_alive = False
             self.collisionp = False
             return Game_Menu.game_over()
 
-
+        #changement de zone vers la droite
         if self.rect.centerx >= Game_Parameters.width:
             self.rect.center = (0, self.rect.y)
             self.subzone += 1
-
+        
+        #changement de zone vers la gauche
         elif self.subzone >= 1 and self.rect.centerx <= 0:
             self.rect.center = (Game_Parameters.width, self.rect.y) 
             self.subzone -= 1
-
 
     def soin(self, soin):
         """

@@ -1,6 +1,6 @@
 # Fiche problèmes - solutions :
 
-### Problème 1 : On peut sauter à l'infini en spammant la touche de saut / La gravité ne marche pas vraiment. 
+### Problème 1 / Résolu Partiellement : On peut sauter à l'infini en spammant la touche de saut / La gravité ne marche pas vraiment. 
 - En appuyant très rapidement sur la même touche de saut, on peut monter très très haut. 
 - J'ai trouvé la solution quand j'ai réfléchi aux collisions. Mon raisonnement était qu'on peut faire en sorte que le joueur ne puisse pas sauter tant qu'il n'y a pas collision avec le sol. 
 - Solution : Utilisation de .colliderect qui permet d'enregistrer des collisions effiacement. Grace à cela, j'ai pu faire en sorte que si le joueur n'est pas en collision, il ne peut pas sauter. 
@@ -10,7 +10,7 @@
 - J'ai trouvé la solution en regardant un tutoriel.
 - Solution : Il faut plus d'images à animer. Quelques images ne suffisent pas car le jeu met à jour les affichages très rapidement. J'ai donc refait toutes les textures et j'ai fait en sorte d'avoir 18 images lorsque le joueur marche vers la droite ou vers la gauche. 
 
-### Problème 3 : L'animation clignote. 
+### Problème 3 / Non résolu : L'animation clignote. 
 - Lorsque le joueur est animé, il clignote. 
 - J'ai trouvé cette solution en recherchant sur Internet. Beaucoup disent qu'il faut limiter les lignes `pygame.display.flip` mais, même avec une limitation, ça clignote toujours. 
 - Solution possible : Une solution est d'augmenter la vitesse du joueur pour qu'on ne voit pas le clignotement : **rejetée car cela deviendrait trop impossible à gérer**
@@ -35,12 +35,14 @@
 - J'ai trouvé cette solution en revenant beaucoup de fois sur mon code, en retestant...
 - Il faut tester si le joueur est dans les bonnes positions en x et y (s'il est trop à droite ou trop à gauche, il ne faut pas qu'il y ait de collisions)
 Puis il faut tester si le joueur est à l'intérieur du bloc, parce que si c'est le cas, il faut qu'il ne puisse pas sauter.
+=> Ce problème est enfaite très massif dans le projet qui a été fait car il a été ma priorité pendant une semaine. Je me suis resigné à garder le minimum de collisions,
+les plus simples. 
 
 ### Problème 8 : Problème de croix.
 - La croix de selection dans le menu est vraiment mal placée.
 - J'ai modifié la taille de la croix pour qu'elle soit plus petite et je la place à droite du texte au lieu d'au dessus. 
 
-### Problème 9 : FPS
+### Problème 9 / Résolu partiellement : FPS
 - Lorsqu'on change les FPS, le joueur ralentis ou accélère.
 - J'ai trouvé la solution en cherchant sur Internet et en regardant des tutoriels. Enfaite, c'est du 
 - Il faut adapter la vitesse de marche selon les FPS. Si les FPS sont à `144`, la vitesse sera égal à `VITESSE / 144` (par exemple)
@@ -53,4 +55,16 @@ Puis il faut tester si le joueur est à l'intérieur du bloc, parce que si c'est
 ### Problème 11 : Dans l'écran "Game Over"
 - Le saut jouait plusieurs fois en même temps.
 - J'ai trouvé la solution en paufinant un peu le code, en ajoutant une boucle while. 
-- La solution : Je joue le son de Game Over avant de répéter l'écran Game Over dans une boucle. De ce fait, le son est joué indépendamment de boucle et ne peut être répété qu'unu seule fois. 
+- La solution : Je joue le son de Game Over avant de répéter l'écran Game Over dans une boucle. De ce fait, le son est joué indépendamment de boucle et ne peut être répété qu'une seule fois. 
+
+### Problème 12 : Le joueur perd de la vie sans raison.
+- Quand le joueur avance dans la sous-zone 3, il perd de la vie sans raison. 
+- J'ai trouvé la solution en prenant du recul sur mon code. 
+- Ce qui se passait : il y avait enfaite un ennemi mais il ne s'affichait pas, il faisait juste des dégâts. J'ai donc enlevé toutes traces d'ennemis dans cette sous-zone.
+
+### Problème 13 / Non résolu : Les collisions, bien qu'elles marchent partiellement, ont l'air moyennes / approximatives. Il y a encore quelques bugs de téléportation
+
+### Problème 14 / Non résolu : L'ennemi "cloudy" ou "cloudlo" n'arrive pas bien à lancer des piques, ils sont approximatifs, et ne touchent pas vraiment le joueur. 
+
+### Problème 15 / Non résolu : La résolution peut tout faire planter. 
+- Potentielle solution : Il faudrait transformer tout les éléments pour les adapter à la nouvelle fenêtre, pareil pour le joueur. 
